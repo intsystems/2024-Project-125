@@ -25,6 +25,7 @@ Abstract
 ========
 
 The problem of continuous machine learning is being solved. The use of aggregation of expert forecasts is one of the important methods to improve the accuracy of prediction. The research focuses on studying the effect of hyperparameters on the accuracy of the aggregation algorithm with a variable number of experts proposed in a recent paper. Finding optimal hyperparameters can lead to high results and wider dissemination of this prediction method.
+
 Research publications
 ===============================
 1. 
