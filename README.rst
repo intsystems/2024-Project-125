@@ -18,13 +18,17 @@ rtest| |codecov| |docs|
     :Название исследуемой задачи: Изучение влияния гиперпараметров на точность алгоритма агрегирования экспертных прогнозов с переменным числом экспертов
     :Тип научной работы: M1P
     :Автор: Кунин-Богоявленский Сергей Михайлович
-    :Научный руководитель: д.ф.-м.н. Вьюгин Владимир Вячеславович
+    :Научный руководитель: д.ф.-м.н. к.ф.-м.н. Зухба Расим Даурович
     :Научный консультант(при наличии): к.ф.-м.н. Зухба Анастасия Викторовна
 
 Abstract
 ========
 
-The problem of continuous machine learning is being solved. The use of aggregation of expert forecasts is one of the important methods to improve the accuracy of prediction. The research focuses on studying the effect of hyperparameters on the accuracy of the aggregation algorithm with a variable number of experts proposed in a recent paper. Finding optimal hyperparameters can lead to high results and wider dissemination of this prediction method.
+Using aggregation of expert forecasts is one of the important methods to improve prediction accuracy. 
+This paper focuses on examining the influence of hyperparameters on the accuracy of the aggregation algorithm with an unknown number of experts. 
+We implemented a time series generator with specified properties and an aggregating forecasting model, based on an existing algorithm. 
+We conducted a series of experiments with various hyperparameters of the algorithm.
+Finding optimal hyperparameters leads to high performance and wider adoption of this prediction method.
 
 Research publications
 ===============================
