@@ -17,7 +17,7 @@
 	{S.\,M.~Kunin-Bogoiavlenskii, A.\,V.~Zukhba, R.\,D.~Zukhba, and V.\,V.~V’yugin} % full list of the authors, presented in the table of contetns of the issue
     [S.\,M.~Kunin-Bogoiavlenskii, A.\,V.~Zukhba] % list of the authors presented in the title page of the article, is necessary only if it differs from the full list of the authors in braces, i.e. '{' and '}'
 \email
-    {kunin-bogoiavlenskii.sm@phystech.edu}
+    {kunin-bogoiavlenskii.sm@phystech.edu; a\_\_l@mail.ru}
 %\thanks
 %    {The research was
 %     %partially
@@ -58,7 +58,7 @@
 
 \section{Introduction}
 %\noindent %this command is placed at the beginning of the first sentence of each paragraph/section only.
-This work is inspired by the algorithm, developed in the article [3], considering online game of prediction with experts' advice. The data is presented as a time series, consisting of outcome pairs --- <<signal>> and <<response>>. 
+This work is inspired by the algorithm, developed in the article \cite{article}, considering online game of prediction with experts' advice. The data is presented as a time series, consisting of outcome pairs --- <<signal>> and <<response>>. 
 In contrast to the classical statistical theory of sequential prediction, we made no assumptions about the nature of the data (which could be deterministic, stochastic, etc.). 
 We used machine learning methods to build forecasters within a game-theoretic approach.
 The online learning master model considers a series of reference forecasters, referred to as experts, to build its opinion by combining their predictions.
@@ -80,11 +80,87 @@ We use special assumptions about the data generation structure when building for
 In this formulation of the forecasting problem, the series of prediction steps is divided into segments that frame arbitrary sequences of expert strategies. The sequence of segments and its associated sequence of experts is called a partition. The modified goal of the aggregating algorithm is to perform well relative to the best partition. Accordingly, the new concept of algorithm regret is the difference between the algorithm's losses and the cumulative losses of the sequence of experts. This change allows for a more accurate modeling of real-life conditions, where the nature of outcomes may change over time and different experts may predict with varying degrees of success depending on the current trend. 
 
 %\noindent
-The corresponding algorithm is called Fixed Share [4]. A further proposed generalization of it is the Mixing Past Posteriors (MPP) method [5]. The cumulative losses of the aggregating algorithm are related to convex combinations of expert losses. The concept of regret also changes. Now the algorithm's cumulative losses are compared to the cumulative losses of convex combinations of expert strategies.
+The corresponding algorithm is called Fixed Share \cite{article98}. A further proposed generalization of it is the Mixing Past Posteriors (MPP) method \cite{article02}. The cumulative losses of the aggregating algorithm are related to convex combinations of expert losses. The concept of regret also changes. Now the algorithm's cumulative losses are compared to the cumulative losses of convex combinations of expert strategies.
 
-A characteristic feature of the problem considered in [3] is the absence of a predefined set of competing expert strategies, as was the case in the works cited above. Instead, new expert strategies are constructed at each step of the online learning process. The master must aggregate the forecasts of all expert strategies constructed up to that time in real-time at each step. Algorithm GMPP, proposed in [3], is the foundation of our experiments. 
+A characteristic feature of the problem considered in \cite{article} is the absence of a predefined set of competing expert strategies, as was the case in the works cited above. Instead, new expert strategies are constructed at each step of the online learning process. The master must aggregate the forecasts of all expert strategies constructed up to that time in real-time at each step. Algorithm GMPP, proposed in \cite{article}, is the foundation of our experiments. 
 
 \section{Problem statement}
+\paragraph{Definitions}
+Let $x_1, x_2, \dots$ be the sequence of signals belonging to the sample space  $\mathsf{X}$. 
+The forecaster's goal is to predict the sequence of the corresponding responces $y_1, y_2, \dots$ belonging to the outcome space $\mathsf{Y}$. 
+We assume that there is an infinite number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
+The predictions of the master and experts belong to the decision space $\mathsf{D}$. 
+Let $ \lambda: \mathsf{D} \times \mathsf{Y} \rightarrow \RR_+$ be the nonnegative loss function. 
+
+At each step $t$ every expert $i \in \mathcal{N}$ provides his prediction $f_t^i = f_t^i(x_t)  \in \mathsf{D}$. 
+After obtaining them the master gives his prediction $p_t = p_t(x_t) \in \mathsf{D}$. 
+Next, the generator reveals the true outcome $y_t$, and the losses are computed.
+Let $l_t^i = \lambda(f_t^i, y_t)$ be the loss of expert $i$, and $h_t = \lambda(p_t, y_t)$ be the master's loss 
+
+Using designations $L_T^i = \sum_{t = 1}^T l_t^i$ --- the cumulative loss of expert $i$ during the first T steps, and $H_T = \sum_{t = 1}^T h_t$ --- the master's cumulative loss during the first T steps, we can define the master's regret relative to the expert $i$ as $R^i_t = H_T - L^i_T$
+\paragraph{Data generator}
+\paragraph{Algorithm GMPP}
+\textbf{Initialization}: Initialize the weights $w^i_1$ so that $\sum_{i \in \mathcal{N}}w^i_1 = 1$
+
+\textbf{FOR} $t = 1, 2, \dots$:
+\begin{enumerate}[leftmargin=4em]
+\item Initialize expert $f^t$
+\item Receive signal $x_t$ from the generator 
+\item Get experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
+\item Compute normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
+\item Evaluate master's prediction $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\item Generator reveals true outcome $y_t$
+\item Compuste master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
+\begin{cases}
+        \lambda(f_t^i, y_t), & \text{if $i \le t$} \\
+        h_t, & \text{if $i > t$}
+\end{cases}$
+%\item Modify experts' weights in two steps:
+
+\item \textbf{Loss Update} weights modification
+\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
+\item \textbf{Mixing Update} weights modification
+\[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t\widetilde{w}_t^i)\] 
+\end{enumerate}
+
+\textbf{ENDFOR}
+
+\bigskip
+It was proved in \cite{article} that for $\alpha = \frac1{t + 1}$ and any partition of $k+1$ experts, the following is true  (where $L_T(E)$ is the cumulative loss of partition $E$) :
+\[ \limsup_{T \to \infty} \dfrac{H_T - L_T(E)}{T} = 0\] 
+
+This allows formulating the main assumption underlying the application of the GMPP algorithm: In cases where it is possible to <<attach>> a valid predictive (expert) strategy to each local sub-sample from the generation area, carrying small losses on each local sub-sample generated by the generator, i.e., <<learn>> this generator, the GMPP algorithm will also predict with sufficiently small losses on the entire sample.
+
+% \begin{aligned} \begin{cases}
+
+
+
+%\begin{equation}
+%    \begin{cases}
+%      k_{i\omega}/k_{p\omega}=2\pi\times 10\\
+%      \left\lvert\frac{k_{p\omega}s+k_{i\omega}}{s}\cdot\frac{1}{Ts+1}\right\rvert_{S=\mathrm{j}\cdot2\pi}=1
+%    \end{cases}\,.
+%\end{equation}
+
+
+%\noindent
+%$\mathsf{X}$ --- sample space to which the sequence of signals $x_1, x_2, \dots$ belongs\\
+%$\mathsf{Y}$ --- outcome space to which the sequence of the corresponding responces $y_1, y_2, \dots$ belongs \\
+%$\mathcal{N}$ --- set of experts, usually natural numbers \\
+% $\mathsf{D}$ --- desicion space, to which predictions belong \\
+% $ \lambda: \mathsf{D} \times \mathsf{Y} \rightarrow \RR_+$ --- nonnegative loss function \\
+%
+%\noindent
+%$L^i_T = \sum\limits_{t = 1}^T l^i_t$ --- cumulative loss of expert $i$ during the first T steps \\
+%$H_T = \sum\limits_{t = 1}^T h_t$ --- master's cumulative loss during the first T steps \\
+%$R^i_t = H_T - L^i_T$ --- master's regret relative to the expert $i$
+%
+%\paragraph{Algorithm}
+%
+%\noindent
+
+
+
 %
 %\section{Preparing a manuscript}
 %\noindent
@@ -120,7 +196,7 @@ A characteristic feature of the problem considered in [3] is the absence of a pr
 	\BibTitle{Prediction, Learning, and Games}.
 	Available at: \BibUrl{https://ii.uni.wroc.pl/~lukstafi/pmwiki/uploads/AGT/Prediction_Learning_and_Games.pdf}
 	
-\bibitem{book}
+\bibitem{vvbook}
 	\BibAuthor{V.\,V'yugin}. 2022.
 	Matematicheskie osnovy mashinnogo obucheniya i prognozirovaniya	
 	[Mathematical Foundations of Machine Learning and Forecasting].
@@ -133,12 +209,12 @@ A characteristic feature of the problem considered in [3] is the absence of a pr
 Expert Advice].
 	Available at: \BibUrl{http://www.jip.ru/2023/470-487-2023.pdf}
 	
-\bibitem{article}
+\bibitem{article98}
 	\BibAuthor{M.\,Herbster, M.\,Warmuth}. 1998.
 	\BibTitle{Tracking the best expert}.
 	Available at: \BibUrl{https://link.springer.com/content/pdf/10.1023/A:1007424614876.pdf}
 	
-\bibitem{article}
+\bibitem{article02}
 	\BibAuthor{O.\,Bousquet, M.\,Warmuth}. 2002.
 	\BibTitle{Tracking a small set of experts by mixing past posteriors}.
 	Available at: \BibUrl{https://www.jmlr.org/papers/volume3/bousquet02b/bousquet02b.pdf}
