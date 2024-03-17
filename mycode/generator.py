@@ -19,10 +19,11 @@ class Generator(object):
         self.total_time = len(self.responses)
 
     def next(self):
-        if self.curr_time + 1 < self.total_time:
-            self.curr_time += 1
-        else:
-            raise IndexError("Time is up!")
+        self.curr_time += 1
+        # if self.curr_time + 1 < self.total_time:
+        #     self.curr_time += 1
+        # else:
+        #     raise IndexError("Time is up!")
 
     def get_signal(self):
         return self.curr_time
@@ -58,24 +59,31 @@ class Generator(object):
         fig, ax = plt.subplots(k, 1, figsize=(15, 15))
         for i in range(k):
             ts = self.ts_list[i]
-            ax[i].plot(np.arange(len(ts)), ts)
+            ax[i].plot(np.arange(len(ts)), ts, color='black')
+            ax[i].set_title(f"Piece made by generator №{i + 1}")
         plt.show()
 
     def draw_binded(self):
-        plt.figure(figsize=(15, 6))
-        plt.plot(np.arange(self.total_time), self.responses)
+        fig, ax1 = plt.subplots(figsize=(15, 6))
+        ax1.plot(np.arange(self.total_time), self.responses, color='black')
+        ax2 = ax1.twiny()
         vital_indexes = [(0, self.indexes[0])]
+        ticks = []
+        labels = []
         for i, stamp in enumerate(self.stamps):
             if 0 < i < len(self.indexes) and self.indexes[i] != self.indexes[i - 1]:
                 vital_indexes.append((i, self.indexes[i]))
-        ticks = []
-        labels = []
-
+            if i < len(self.stamps) - 1:
+                ticks.append((self.stamps[i] + self.stamps[i+1]) / 2)
+                labels.append(f"expert {self.indexes[i]}")
         for i, idx in vital_indexes:
-            plt.axvline(self.stamps[i], color='red')
-            ticks.append(self.stamps[i])
-            labels.append(f"     {idx} =>")
-        plt.axvline(self.stamps[-1], color='red')
-        plt.xticks(ticks, labels)
+            plt.axvline(self.stamps[i], color='orange')
+            # ticks.append((self.stamps[i] + self.stamps[i+1]) / 2)
+            # labels.append(f"expert {idx}")
+        ax2.axvline(self.stamps[-1], color='orange')
+        ax2.set_xticks(ticks, labels)
+        ax2.tick_params(labelcolor='orange')
+        plt.title("Merged time series")
         plt.show()
+
 

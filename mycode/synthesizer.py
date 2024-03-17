@@ -12,7 +12,8 @@ class Synthesizer(object):
         random_indexes = np.random.randint(self.workers_num, size=pieces_num - self.workers_num)
         indexes = np.r_[np.arange(self.workers_num), random_indexes]
         pieces_sizes = np.random.randint(lower_bound, upper_bound, size=pieces_num)
-        ts_list = [self.generate_time_series(*self.params_list[idx], pieces_sizes[idx]) for idx in indexes]
+        ts_list = [self.generate_time_series(*self.params_list[idx], pieces_sizes[i])
+                   for i, idx in enumerate(indexes)]
         return self.params_list, indexes, ts_list
 
     def generate_time_series(self, ar_params, ma_params, trend_coef, seasonal_coef, noise_var, n):
@@ -41,13 +42,13 @@ class Synthesizer(object):
     def generate_random_params(self):
         ar = np.r_[1, self.generate_ar_params()]
         ma = np.r_[1, self.generate_ma_params()]
-        trend_coef = uniform(-1, 1)
+        trend_coef = uniform(-1, 1) * 0.5
         seasonal_coef = [0] #10 * (np.random.rand(3) - 0.5)
-        noise_var = 1
+        noise_var = 0
         return ar, ma, trend_coef, seasonal_coef, noise_var
 
     def generate_ar_params(self):
-        ar_1 = uniform(-1, 1)
+        ar_1 = uniform(-1, 1) * 0.5
         return ar_1
         # ar_2 =  uniform(-1, min(1 + ar_1, 1 - ar_1))
         # ar_params = np.r_[ar_1, ar_2]
@@ -56,9 +57,9 @@ class Synthesizer(object):
         # return ar_params if ar_stationary else generate_ar_params()
 
     def generate_ma_params(self):
-        ma_1 = uniform(-1, 1)
+        ma_1 = uniform(-1, 1) * 0.5
         # return ma_1
-        ma_2 = uniform(max(-1 + ma_1, -1 - ma_1), 1)
+        ma_2 = uniform(max(-1 + ma_1, -1 - ma_1), 1) * 0.5
         ma_params = np.r_[ma_1, ma_2]
         ma_roots = np.roots(np.r_[1, ma_params])
         ma_invertible = np.all(np.abs(ma_roots) < 1)
