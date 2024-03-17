@@ -15,7 +15,7 @@ class Generator(object):
     def generate(self, pieces_num, lower_bound, upper_bound):
         self.params_list, self.indexes, self.ts_list = \
             self.synthesizer.generate_ts_list(pieces_num, lower_bound, upper_bound)
-        self.responses, self.stamps = self.bind_time_series(self.ts_list)
+        self.responses, self.stamps = self.merge_time_series(self.ts_list)
         self.total_time = len(self.responses)
 
     def next(self):
@@ -31,7 +31,7 @@ class Generator(object):
     def get_response(self):
         return self.responses[self.curr_time]
 
-    def bind_time_series(self, time_series_list: list[np.array]):
+    def merge_time_series(self, time_series_list: list[np.array]):
         total_len = sum(len(ts) for ts in time_series_list)
         merged_time_series = np.zeros(total_len)
         start_idx = 0
@@ -63,7 +63,7 @@ class Generator(object):
             ax[i].set_title(f"Piece made by generator №{i + 1}")
         plt.show()
 
-    def draw_binded(self):
+    def draw_merged(self):
         fig, ax1 = plt.subplots(figsize=(15, 6))
         ax1.plot(np.arange(self.total_time), self.responses, color='black')
         ax2 = ax1.twiny()
@@ -75,15 +75,11 @@ class Generator(object):
                 vital_indexes.append((i, self.indexes[i]))
             if i < len(self.stamps) - 1:
                 ticks.append((self.stamps[i] + self.stamps[i+1]) / 2)
-                labels.append(f"expert {self.indexes[i]}")
+                labels.append(f"generator {self.indexes[i]+1}")
         for i, idx in vital_indexes:
             plt.axvline(self.stamps[i], color='orange')
-            # ticks.append((self.stamps[i] + self.stamps[i+1]) / 2)
-            # labels.append(f"expert {idx}")
         ax2.axvline(self.stamps[-1], color='orange')
         ax2.set_xticks(ticks, labels)
         ax2.tick_params(labelcolor='orange')
         plt.title("Merged time series")
         plt.show()
-
-
