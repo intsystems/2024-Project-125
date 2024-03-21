@@ -28,40 +28,58 @@
 
 %----------------------------------------------------------------------------------------------------------
 \begin{document}
-%%----------------------------------------------------------------------------------------------------------
-%\begin{frame}
-%\thispagestyle{empty}
-%\maketitle
-%\end{frame}
-%%-----------------------------------------------------------------------------------------------------
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}
+\thispagestyle{empty}
+\maketitle
+\end{frame}
+%-----------------------------------------------------------------------------------------------------
 %\begin{frame}{Goal of research}
 %..
 %\end{frame}
-%%-----------------------------------------------------------------------------------------------------
-\begin{frame}{Influence of hyperparameters on aggregating predictions of infinite number of experts}
+%-----------------------------------------------------------------------------------------------------
+\begin{frame}{One-slide talk}
 
 %Please comment all slides but this one if you make the One-slide talk.
 
 \begin{columns}[c]
 \column{0.6\textwidth}
+\includegraphics[width=1.0\textwidth]{Merged}
 \includegraphics[width=1.0\textwidth]{ErrorFunction}
-  
-\column{0.6\textwidth}
+\column{0.5\textwidth}
+Goals:
+
+    \begin{enumerate}
+     \item Time series generator 
+    \item Aggregating model    
+    \item Experiments with various hyperparameters    
+    \end{enumerate}
+Terms:
     \begin{itemize}
-    \item Time series generator implementation 
-    \item Aggregating forecasting model implementation
-    \item Conduction of experiments with various hyperparameters of the algorithm
+    \item $X$ --- signals space
+    \item $Y$ --- responses space
+    \item Experts $i \in \mathcal{N}$ 
+    \item Master
     \end{itemize}
+    Iteration:
+    \begin{enumerate}
+    \item Expert initialization
+    \item Predictions
+    \item Loss weights update
+    \item Mixing weights update
+    \end{enumerate}
 \end{columns}
 
-\bigskip
-\textbf{Keywords}: \emph{online learning; aggregating algorithm; prediction with experts’ advice; Fixed Share, Mixing Past Posteriors (MPP)}
+
+
+%\bigskip
+%\textbf{Keywords}: \emph{online learning; aggregating algorithm; prediction with experts’ advice; Fixed Share, Mixing Past Posteriors (MPP)}
 \end{frame}
 
 
 %%----------------------------------------------------------------------------------------------------------
 %\begin{frame}{Problem statement}
-%..
+%..q
 %\end{frame}
 %%----------------------------------------------------------------------------------------------------------
 %\begin{frame}{Solution}
