@@ -18,7 +18,6 @@ class Synthesizer(object):
         ts_list = [self.generate_time_series(*self.params_list[idx], pieces_sizes[i], self.rs+i)
                    for i, idx in enumerate(indexes)]
         return self.params_list, indexes, ts_list
-
     def generate_time_series(self, ar_params, ma_params, trend_coef, seasonal_coef, noise_var, n, rs):
         """
         Generate a stationary time series with trend, seasonality, and ARMA components.
@@ -37,6 +36,7 @@ class Synthesizer(object):
         np.random.seed(rs)
         time_series = arima_p.arma_generate_sample(ar_params, ma_params, n)
         time_series += trend_coef * np.arange(n)
+        # time_series += np.power(np.arange(n), 1 + (trend_coef + 0.5) * 0.5)
         seasonal_component = np.tile(seasonal_coef, n // len(seasonal_coef) + 1)[:n]
         time_series += seasonal_component
         noise = np.random.normal(0, noise_var, n)

@@ -105,8 +105,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# Exclude __pycache__ :
-__pycache__/
 # Exclude .gitignore:
 .gitignore
 # Exclude folders with name logs:
@@ -122,4 +120,11 @@ logs/
 !.dvc
 
 # TexShop stuff
+*.aux
+*.out
+*.synctex.gz
 *.synctex(busy)
+
+#*.nav
+#*.toc
+#*.snm
