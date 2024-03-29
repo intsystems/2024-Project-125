@@ -1,6 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def merge_time_series(ts_list):
+    merged_signals = np.concatenate([s for s, r in ts_list], axis=0)
+    merged_responses = np.concatenate([r for s, r in ts_list])
+    stamps = np.r_[0, np.cumsum([r.size for s, r in ts_list])]
+    return merged_signals, merged_responses, stamps
+
+
 class Generator(object):
     def __init__(self, synthesizer):
         self.synthesizer = synthesizer
@@ -13,10 +21,10 @@ class Generator(object):
         self.indexes = None
         self.stamps = None
 
-    def generate(self, pieces_num, lower_bound, upper_bound, alternating):
+    def generate(self, pieces_num=10, lower_bound=80, upper_bound=100, alternating=True):
         self.params_list, self.indexes, self.ts_list = \
             self.synthesizer.generate_ts_list(pieces_num, lower_bound, upper_bound, alternating)
-        self.signals, self.responses, self.stamps = self.merge_time_series(self.ts_list)
+        self.signals, self.responses, self.stamps = merge_time_series(self.ts_list)
         self.total_time = len(self.responses)
 
     def next(self):
@@ -28,12 +36,6 @@ class Generator(object):
     def get_response(self):
         return self.responses[self.curr_time]
 
-    def merge_time_series(self, ts_list):
-        merged_signals = np.concatenate([s for s, r in ts_list], axis=0)
-        merged_responses = np.concatenate([r for s, r in ts_list])
-        stamps = np.r_[0, np.cumsum([r.size for s, r in ts_list])]
-        return merged_signals, merged_responses, stamps
-
     def show_time_series(self):
         k = self.synthesizer.workers_num
         fig, ax = plt.subplots(k, 1, figsize=(15, 15))
@@ -42,7 +44,6 @@ class Generator(object):
             ax[i].plot(np.arange(len(ts)), ts, color='black')
             ax[i].set_title(f"Piece made by generator №{i + 1}")
         plt.show()
-
 
     def draw_merged(self):
         fig, ax1 = plt.subplots(figsize=(15, 6))

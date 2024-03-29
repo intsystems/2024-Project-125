@@ -124,7 +124,6 @@ logs/
 *.out
 *.synctex.gz
 *.synctex(busy)
-
-#*.nav
-#*.toc
-#*.snm
+*.nav
+*.toc
+*.snm
