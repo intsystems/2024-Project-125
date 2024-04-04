@@ -105,13 +105,13 @@ Using designations $L_T^i = \sum_{t = 1}^T l_t^i$ --- the cumulative loss of exp
 
 \textbf{FOR} $t = 1, 2, \dots$:
 \begin{enumerate}[leftmargin=4em]
-\item Initialize expert $f^t$
-\item Receive signal $x_t$ from the generator 
-\item Get experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
+\item Expert $f^t$ initialization
+\item Signal $x_t$ received from the generator 
+\item Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
 \item Compute normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-\item Evaluate master's prediction $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\item Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
 \item Generator reveals true outcome $y_t$
-\item Compuste master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
+\item Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
 \begin{cases}
         \lambda(f_t^i, y_t), & \text{if $i \le t$} \\
         h_t, & \text{if $i > t$}
@@ -260,98 +260,5 @@ Expert Advice].
 %  	Place of publication:~The institution that published.  Report~2.
   	     	
 \end{thebibliography}
-
-
-%
-%\titleRus
-%    [Шаблон статьи для публикации] % short title for page headings, not necessary if a full title fits the headings
-%    {Шаблон статьи для публикации в журнале <<Машинное обучение и анализ данных>>} % full title
-%\authorRus
-%    [И.\,О.~Автор] % short list of the authors (<= 3) for page headings, is necessary only if the full list does not fit the headings
-%    {И.\,О.~Автор, И.\,О.~Соавтор, И.\,О.~Фамилия} % full list of the authors, presented in the table of contetns of the issue
-%    [И.\,О.~Автор$^1$, И.\,О.~Соавтор$^2$, И.\,О.~Фамилия$^{1,2}$] % list of the authors presented in the title page of the article, is necessary only if it differs from the full list of the authors in braces, i.e. '{' and '}'
-%\thanksRus
-%    {Работа выполнена при
-%     %частичной
-%     финансовой поддержке РФФИ, проекты \No\ \No 00-00-00000 и 00-00-00001.}
-%\organizationRus
-%    {Московский Физико-Технический Институт}
-%\abstractRus
-%    {Данный текст является шаблоном статьи, подаваемой для публикации в журнале <<Машинное обучение и анализ данных>>.
-%
-%    Аннотация описывает основную цель работы,
-%    особенности предлагаемого подхода и~основные результаты.
-%    Сведения, содержащиеся в заглавии статьи, не должны повторяться в тексте авторского резюме.
-%    В аннотации не должно быть ссылок на литературу и, по возможности, формул.
-%	
-%	Также необходимо представить расширенную структурированную аннотацию на английском языке объемом 200--300 слов.	
-%	Английская аннотация может не быть дословным переводом русского текста и должна быть написана хорошим английским языком.
-%	
-%	В титульном заголовке необходимо указать полный, официально принятый, переводной вариант названия организации.
-%	Указывать нужно только ту часть названия, которая относится к понятию юридического лица,
-%	не вписывая названий кафедры, лаборатории или другого структурного подразделения внутри организации.
-%	Необходимо указать полный юридический адрес, или, как минимум, город и страну.
-% 	
-% 	При выборе ключевых слов основным критерием является их потенциальная ценность для выражения содержания документа или для его поиска.
-%	В качестве ключевых слов могут использоваться термины из названия, аннотации, вступительной и заключительной части текста статьи.
-% 	При подборе ключевых слов рекомендуется использовать базовые термины вместе с более сложными, допускается использование повторов и синонимов.
-%	Не рекомендуется использование слишком сложных слов, слов в кавычках, слов с запятыми.
-%	По возможности следует применять слова в основной форме именительного падежа единственного числа.
-%	Рекомендуемое количество ключевых слов~-- 5-7, количество слов внутри ключевой фразы~-- не более 3.
-%	
-%\bigskip
-%\noindent
-%\textbf{Ключевые слова}: \emph {ключевое слово; ключевое слово; еще ключевые слова, разделенные <<;>>}
-%}
-%
-
-%
-%\maketitleSecondary
-%\Russian
-%%%%% please specify doi of the cited item if possible, see~\bibitem{article}
-%%%%% Crossref doi of the item can be retrieved at http://www.crossref.org/guestquery/
-%\begin{thebibliography}{99}
-%\bibitem{book}
-%    \BibAuthor{Гуссенс~М., Миттельбах~Ф., Cамарин~А.}
-%    \BibTitle{Путеводитель по пакету \LaTeX\ и~его расширению \LaTeXe} / Пер. с англ.~---
-%    М.:~Мир, 1999. 606~с.
-%    (\BibAuthor{Goossens M., Mittelbach F., Samarin A.}
-%     \BibTitle{The \LaTeX\ companion}.~--- 2nd ed.~--- Reading, MA, USA: Addison-Wesley, 1994. 528 p.)
-%
-%\bibitem{article}
-%    \BibAuthor{Загуренко~А.\,Г., Коротовских~В.\,А., Колесников~А.\,А., Тимонов~А.\,В., Кардымов~Д.\,В.}
-%    Технико-экономическая оптимизация дизайна гидроразрыва пласта~//
-%    \BibJournal{Нефтяное хозяйство}, 2008. Т.~11. \No\,1. С.~54--57.
-%	\BibDoi{10.3114/S187007708007}.
-%
-%\bibitem{webArticle}
-%	\BibAuthor{Blaga~P.\,A.}
-%	Commutative Diagrams with XY-pic II. Frames and Matrices~//
-%	\BibJournal{PracTEX J.}, 2007. Vol.\,4.
-%	URL: \BibUrl{https://tug.org/pracjourn/2007-1/blaga/blaga.pdf}.
-%
-%\bibitem{webResource}
-%	XYpic.
-%	URL: \BibUrl{http://akagi.ms.u-tokyo.ac.jp/input9.pdf}.
-%	
-%\bibitem{inproceedingsRus}
-%	\BibAuthor{Усманов~Т.\,С., Гусманов~А.\,А., Муллагалин~И.\,З., Мухаметшина~Р.\,Ю., Червякова~А.\,Н., Свешников~А.\,В.}
-%	Особенности проектирования разработки месторождений с применением гидроразрыва пласта~//
-%	\BibJournal{Труды 6-го Междунар. симп. <<Новые ресурсосберегающие технологии недропользования и повышения нефтегазоотдачи>>}.~---
-%	М.:~Издательство, 2007. С.~267--272.
-%
-%\bibitem{inproceedingsEng}
-%    \BibAuthor{Author~N.}
-%    Paper title~//
-%    \BibJournal{10th Conference (International) on Any Science Proceedings}.~---
-%    Place of publication: Publisher, 2009. P.~111--122.
-%
-%\bibitem{techreport}
-%	\BibAuthor{Lambert~P.}
-%  	\BibTitle{The title of the work}.
-%  	Place of publication:~The institution that published, 1993.  Report~2.
-% 	
-%\end{thebibliography}
-
 
 \end{document}
