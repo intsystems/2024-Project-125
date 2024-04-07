@@ -8,7 +8,7 @@ import copy
 DEFAULT_CONST = 2.10974
 
 
-def default_weights0_func(x):
+def default_weights_func(x):
     return 1 / ((x + 1) * np.square(np.log(x + 1))) / DEFAULT_CONST
 
 
@@ -24,7 +24,8 @@ class Algorithm(object):
 
     def __init__(self, series_type, generator, train_window,
                  total_time=None, a=None, b=None,
-                 weights0_func=None, alpha_func=None, init_pretrained=False):
+                 weights_func=None, weight_const=None, alpha_func=None,
+                 init_pretrained=False):
         """
         Algorithm constructor
 
@@ -38,7 +39,7 @@ class Algorithm(object):
                 Defaults to the minimum response value in the generator.
             b (float, optional): The upper bound of the response range.
                 Defaults to the maximum response value in the generator.
-            weights0_func (callable, optional): A function that defines the initial weights for experts.
+            weights_func (callable, optional): A function that defines the initial weights for experts.
                 Defaults to a specific decreasing function.
             alpha_func (callable, optional): A function that defines mixing update coefficients.
                 Defaults to  lambda t: 1 / (t + 1)
@@ -54,11 +55,12 @@ class Algorithm(object):
         self.a = a if a is not None else self.generator.responses.min()
         self.b = b if b is not None else self.generator.responses.max()
         self.eta = 2. / np.square(self.b - self.a)
-        self.weight_const = DEFAULT_CONST
-        self.weights0_func = default_weights0_func \
-            if weights0_func is None else weights0_func
-        self.alpha_func = default_alpha_func \
-            if alpha_func is None else alpha_func
+        self.weight_const = weight_const \
+            if weight_const is not None else DEFAULT_CONST
+        self.weights_func = weights_func \
+            if weights_func is not None else default_weights_func
+        self.alpha_func = alpha_func \
+            if alpha_func is not None else default_alpha_func
         self.loss_func = lambda x, y: np.square(x - y)
 
         self.signals = np.zeros((self.total_time, self.generator.synthesizer.dim))
@@ -67,7 +69,7 @@ class Algorithm(object):
         self.experts = []
         self.init_pretrained = init_pretrained
 
-        self.weights1 = self.weights0_func(np.arange(1, self.total_time))
+        self.weights1 = self.weights_func(np.arange(1, self.total_time))
         self.weights = np.r_[0, self.weights1]
         self.normalized_weights = np.zeros(self.total_time)
 
@@ -85,11 +87,15 @@ class Algorithm(object):
         self.segment_losses = np.full((self.generator.pieces_num, self.total_time), np.inf)
         self.best_combo = np.zeros(self.generator.pieces_num)
         self.ideal_losses = np.zeros(self.total_time)
-        self.start_losses = np.zeros(self.total_time)
+
+        self.regret = 0.
 
         self.theoretical_upper = np.zeros(self.total_time)
         self.weights_all = np.zeros((self.total_time, self.total_time))
         self.models_idxs = []
+
+        self.shift = 0
+        self.end = self.total_time
 
     def theoretical_upper_func(self, k, t):
         """
@@ -242,6 +248,9 @@ class Algorithm(object):
         e_l = np.exp(-self.eta * self.experts_losses[1:self.total_time])
         divisor = (np.dot(self.weights[1:self.curr_time + 1], e_l[:self.curr_time]) +
                    np.exp(-self.eta * self.master_loss) * (1 - self.weights[1:self.curr_time + 1].sum()))
+
+        if 1 - self.weights[1:self.curr_time + 1].sum() <= 0:
+            print("self.weights[1:self.curr_time + 1].sum() = ", self.weights[1:self.curr_time + 1].sum())
         assert (1 - self.weights[1:self.curr_time + 1].sum() > 0)
         self.weights[1:self.total_time] = self.weights[1:self.total_time] * e_l / divisor
 
@@ -293,26 +302,35 @@ class Algorithm(object):
             else:
                 self.ideal_losses[left:right] = self.experts_losses_all[left:right, self.best_combo[seg_num]]
 
-    def post_calculations(self, shift):
+    def count_theoretical_upper(self):
+        k = 0
+        for idx, left, right in zip(self.generator.indexes, self.generator.stamps, self.generator.stamps[1:]):
+            # expert_num = self.generator.stamps[idx] + self.train_window
+            # self.start_losses[left:right] = self.experts_losses_all[left:right, expert_num]
+            if left < self.shift:
+                continue
+            k += 1
+            for t in np.arange(left, right):
+                self.theoretical_upper[t] = self.theoretical_upper_func(k, t - self.shift)
+
+        self.theoretical_upper[self.shift:self.end] += self.ideal_losses[self.shift:self.end].cumsum()
+
+    def post_calculations(self, from_start=True, end=None):
         """
         Performs post-processing calculations,
             including segment loss calculations and theoretical upper bound computation.
         """
+        if not from_start:
+            self.shift = self.generator.stamps[self.generator.synthesizer.workers_num]
+        if end is not None:
+            self.end = end + self.shift
+        
         self.count_segment_losses()
-        k = 0
-        for idx, left, right in zip(self.generator.indexes, self.generator.stamps, self.generator.stamps[1:]):
-            expert_num = self.generator.stamps[idx] + self.train_window
-            self.start_losses[left:right] = self.experts_losses_all[left:right, expert_num]
-            if left < shift:
-                continue
-            k += 1
-            for t in np.arange(left, right):
-                self.theoretical_upper[t] = self.theoretical_upper_func(k, t - shift)
+        self.count_theoretical_upper()
+        self.regret = self.master_losses_all[self.shift:self.end].sum() - self.ideal_losses[self.shift:self.end].sum()
 
-        self.theoretical_upper[shift:] += self.ideal_losses[shift:].cumsum()
-
-    def draw_all(self, show=None, show_experts=None, show_from_start=True,
-                 show_axes=None, height_ratios=None, fig_size=(15, 10)):
+    def draw_all(self, show=None, show_experts=None,
+                 show_axes=None, height_ratios=None, suptitle=None, fig_size=(15, 10)):
         """
         Visualizes the performance of the AA algorithm,
             including predictions, losses, regrets, and theoretical bounds.
@@ -325,7 +343,7 @@ class Algorithm(object):
                 Defaults to ["regret"].
             height_ratios (list, optional): A list of height ratios for the subplots.
                 Defaults to [1 for _ in show_axes].
-            show_from_start (bool, optional): Whether to display the plots
+            from_start (bool, optional): Whether to display the plots
                 from the beginning of the time series or after the initial experts. Defaults to True.
             fig_size (tuple, optional): Figure size. Defaults to (15,10).
 
@@ -341,32 +359,31 @@ class Algorithm(object):
             show_axes = ["regret"]
         if height_ratios is None:
             height_ratios = [1 for _ in show_axes]
+        if suptitle is None:
+            suptitle = "Algorithm"
         assert len(show_axes) == len(height_ratios), "Wrong sizes"
-
-        shift = 0 if show_from_start else self.generator.stamps[self.generator.synthesizer.workers_num]
 
         text_idx = 0
 
-        self.post_calculations(shift)
         fig, axes = plt.subplots(len(show_axes), 1, figsize=fig_size, sharex=True, height_ratios=height_ratios)
         ax = [axes] if len(show_axes) == 1 else axes
-        grid = np.arange(self.total_time - shift)
+        grid = np.arange(self.end - self.shift)
 
         try:
             idx = show_axes.index("value")
 
-            ax[idx].plot(grid, self.responses[shift:], label="Real responses",
+            ax[idx].plot(grid, self.responses[self.shift:self.end], label="Real responses",
                          color='black')
 
             if "zero" in show:
-                ax[idx].plot(grid, np.full(self.total_time - shift, 0),
+                ax[idx].plot(grid, np.full(self.end - self.shift, 0),
                              label="Zero expert predictions",
                              color='yellow')
             for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_predictions_all.T[expert_num][shift:],
+                ax[idx].plot(grid, self.experts_predictions_all.T[expert_num][self.shift:self.end],
                              label=f"Expert {expert_num} predictions")
             if "master" in show:
-                ax[idx].plot(grid, self.master_predictions_all[shift:],
+                ax[idx].plot(grid, self.master_predictions_all[self.shift:self.end],
                              label="Master predictions",
                              color='red')
             ax[idx].set_xlabel("Time")
@@ -382,20 +399,17 @@ class Algorithm(object):
             text_idx = idx
 
             if "ideal" in show:
-                ax[idx].plot(grid, self.ideal_losses[shift:], label="Ideal expert losses",
+                ax[idx].plot(grid, self.ideal_losses[self.shift:self.end], label="Ideal expert losses",
                              color='green')
-            if "start" in show:
-                ax[idx].plot(grid, self.start_losses[shift:],
-                             label="Starter expert losses", color='purple')
             if "zero" in show:
-                ax[idx].plot(grid, self.loss_func(self.responses, 0)[shift:],
+                ax[idx].plot(grid, self.loss_func(self.responses, 0)[self.shift:self.end],
                              label="Zero expert losses",
                              color='yellow')
             for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][shift:],
+                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:self.end],
                              label=f"Expert {expert_num} losses")
             if "master" in show:
-                ax[idx].plot(grid, self.master_losses_all[shift:], label="Master losses",
+                ax[idx].plot(grid, self.master_losses_all[self.shift:self.end], label="Master losses",
                              color='red')
 
             ax[idx].set_ylabel("Loss")
@@ -408,26 +422,22 @@ class Algorithm(object):
             idx = show_axes.index("regret")
 
             if "ideal" in show:
-                ax[idx].plot(grid, self.ideal_losses[shift:].cumsum(),
+                ax[idx].plot(grid, self.ideal_losses[self.shift:self.end].cumsum(),
                              label="Ideal expert cumulative losses", color='green')
-            if "start" in show:
-                ax[idx].plot(grid, self.start_losses[shift:].cumsum(),
-                             label="Starter expert cumulative losses",
-                             color='purple')
             if "zero" in show:
-                ax[idx].plot(grid, self.loss_func(self.responses, 0)[shift:].cumsum(),
+                ax[idx].plot(grid, self.loss_func(self.responses, 0)[self.shift:self.end].cumsum(),
                              label="Zero expert cumulative losses", color='yellow')
 
             for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][shift:].cumsum(),
+                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:self.end].cumsum(),
                              label=f"Expert {expert_num} cumulative losses")
 
             if "master" in show:
-                ax[idx].plot(grid, self.master_losses_all[shift:].cumsum(),
+                ax[idx].plot(grid, self.master_losses_all[self.shift:self.end].cumsum(),
                              label="Master cumulative losses", color='red')
 
             if "theoretical" in show:
-                ax[idx].plot(grid, self.theoretical_upper[shift:],
+                ax[idx].plot(grid, self.theoretical_upper[self.shift:self.end],
                              label="Theoretical upper bound", color='black')
 
             ax[idx].set_xlabel("Time")
@@ -440,13 +450,14 @@ class Algorithm(object):
         bottom, top = ax[text_idx].get_ybound()
         left, right = ax[text_idx].get_xbound()
         for gen_idx, gen_stamp in zip(np.r_[self.generator.indexes, -1], self.generator.stamps):
-            if gen_stamp < shift:
+            if gen_stamp < self.shift or gen_stamp > self.end:
                 continue
             for i in range(len(show_axes)):
-                ax[i].axvline(gen_stamp - shift, color='orange', linestyle=':')
+                ax[i].axvline(gen_stamp - self.shift, color='orange', linestyle=':')
             if gen_idx != -1:
-                ax[text_idx].text(x=gen_stamp - shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
+                ax[text_idx].text(x=gen_stamp - self.shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
                                   s=f"gen {gen_idx}", color='orange', rotation=15)
 
+        fig.suptitle(suptitle, fontsize=15)
         plt.show()
-        return fig, ax
+        return

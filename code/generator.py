@@ -73,24 +73,22 @@ class Generator(object):
         self.indexes = None
         self.stamps = None
 
-    def generate(self, pieces_num, lower_bound, upper_bound, alternating=True):
+    def generate(self, length, from_start, lower_bound, upper_bound, alternating=True):
         """
         Generates a merged time series from multiple pieces with specified parameters.
 
         Args:
-            pieces_num (int, optional): The number of pieces in the time series.
             lower_bound (int, optional): The lower bound for the piece sizes.
             upper_bound (int, optional): The upper bound for the piece sizes.
             alternating (bool, optional): Whether to use alternating indices for the generators. Defaults to True.
         """
-        self.pieces_num = pieces_num
-        self.params_list, self.indexes, self.ts_list = \
-            self.synthesizer.generate_ts_list(pieces_num, lower_bound, upper_bound, alternating)
+        self.total_time, self.params_list, self.indexes, self.ts_list = \
+            self.synthesizer.generate_ts_list(length, from_start, lower_bound, upper_bound, alternating)
         if self.series_type == "default":
             self.signals, self.responses, self.stamps = merge_default_time_series(self.ts_list)
         if self.series_type == "arima":
             self.signals, self.responses, self.stamps = merge_arima_time_series(self.ts_list)
-        self.total_time = len(self.responses)
+        self.pieces_num = len(self.indexes)
 
     def launch(self):
         """

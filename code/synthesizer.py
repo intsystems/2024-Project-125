@@ -20,14 +20,18 @@ def generate_default_time_series(weights, clip, n, rs):
     """
     np.random.seed(rs)
     dim = len(weights)
-    signals = np.random.normal(0, 1, size=(n, dim))
-    noise_var = 1
-    noise = np.random.normal(0, noise_var, n)
-    responses = signals @ weights + noise
-    if clip is not None:
-        signals = signals[(clip[0] < responses) & (responses < clip[1])]
-        responses = responses[(clip[0] < responses) & (responses < clip[1])]
-    return signals, responses
+    final_signals = np.empty((0, dim))
+    final_responses = np.empty(0)
+    while final_responses.size < n:
+        signals = np.random.normal(0, 1, size=(n, dim))
+        noise_var = 1
+        noise = np.random.normal(0, noise_var, n)
+        responses = signals @ weights + noise
+        if clip is not None:
+            final_signals = np.r_[final_signals, signals[(clip[0] < responses) & (responses < clip[1])]]
+            final_responses = np.r_[final_responses, responses[(clip[0] < responses) & (responses < clip[1])]]
+
+    return final_signals[:n], final_responses[:n]
 
 
 def generate_ar_params(rs):
@@ -109,7 +113,7 @@ class Synthesizer(object):
     """
     This class is responsible for generating synthetic time series data with different characteristics.
     """
-    def __init__(self, series_type, dim, low, high, clip = None,
+    def __init__(self, series_type, dim, low, high, clip=None,
                  noise_var=1, workers_num=2, random_seed=18):
         """
         Synthesizer constructor
@@ -135,31 +139,12 @@ class Synthesizer(object):
         self.workers_num = workers_num
         self.params_list = None
 
-    def alternating_indexes(self, pieces_num):
-        """
-        Generates a sequence of alternating indices for the generators.
-
-        Args:
-            pieces_num (int): The number of pieces in the time series.
-
-        Returns:
-            np.array: An array of alternating indices.
-        """
-        np.random.seed(self.rs)
-        result = list(np.arange(self.workers_num))
-        for i in range(pieces_num - self.workers_num):
-            num = np.random.randint(self.workers_num)
-            while num == result[-1]:
-                num = np.random.randint(self.workers_num)
-            result.append(num)
-        return np.array(result)
-
-    def generate_indexes_and_sizes(self, pieces_num, lower_bound, upper_bound, alternating):
+    def generate_indexes_and_sizes(self, length, from_start, lower_bound, upper_bound, alternating):
         """
         Generates indices and sizes for the pieces of the time series.
 
         Args:
-            pieces_num (int): The number of pieces in the time series.
+            length (int): The length of the time series.
             lower_bound (int): The lower bound for the piece sizes.
             upper_bound (int): The upper bound for the piece sizes.
             alternating (bool): Whether to use alternating indices for the generators.
@@ -168,20 +153,33 @@ class Synthesizer(object):
             tuple: A tuple containing the piece indices (np.array) and piece sizes (np.array).
         """
         np.random.seed(self.rs)
-        if alternating:
-            pieces_indexes = self.alternating_indexes(pieces_num)
-        else:
-            random_indexes = np.random.randint(self.workers_num, size=pieces_num - self.workers_num)
-            pieces_indexes = np.r_[np.arange(self.workers_num), random_indexes]
-        pieces_sizes = np.random.randint(lower_bound, upper_bound, size=pieces_num)
+        pieces_indexes = np.arange(self.workers_num).tolist()
+        pieces_sizes = np.random.randint(lower_bound, upper_bound, size=self.workers_num).tolist()
+        curr_total = sum(pieces_sizes) if from_start else 0
+
+        while curr_total < length:
+            num = np.random.randint(self.workers_num)
+            if alternating:
+                while num == pieces_indexes[-1]:
+                    num = np.random.randint(self.workers_num)
+                pieces_indexes.append(num)
+            else:
+                pieces_indexes.append(num)
+
+            size = np.random.randint(lower_bound, upper_bound)
+            if size > length - curr_total:
+                size = length - curr_total
+            pieces_sizes.append(size)
+            curr_total += size
+
         return pieces_indexes, pieces_sizes
 
-    def generate_ts_list(self, pieces_num, lower_bound, upper_bound, alternating):
+    def generate_ts_list(self, length, from_start, lower_bound, upper_bound, alternating):
         """
         Generates a list of time series pieces with varying parameters.
 
         Args:
-            pieces_num (int): The number of pieces in the time series.
+            length (int): The length of the time series.
             lower_bound (int): The lower bound for the piece sizes.
             upper_bound (int): The upper bound for the piece sizes.
             alternating (bool): Whether to use alternating indices for the generators.
@@ -190,17 +188,18 @@ class Synthesizer(object):
             tuple: A tuple containing the parameter list, piece indices, and the list of time series pieces.
         """
         pieces_indexes, pieces_sizes = (self.generate_indexes_and_sizes
-                                        (pieces_num, lower_bound, upper_bound, alternating))
+                                        (length, from_start, lower_bound, upper_bound, alternating))
+        total_time = sum(pieces_sizes)
         if self.series_type == "default":
             self.params_list = [self.generate_default_weights(self.rs + i) for i in range(self.workers_num)]
             ts_list = [generate_default_time_series(self.params_list[idx], self.clip, pieces_sizes[i], self.rs + i)
                        for i, idx in enumerate(pieces_indexes)]
-            return self.params_list, pieces_indexes, ts_list
+            return total_time, self.params_list, pieces_indexes, ts_list
         if self.series_type == "arima":
             self.params_list = [generate_arima_params(self.rs + 3*i) for i in range(self.workers_num)]
             ts_list = [generate_arima_time_series(*self.params_list[idx], pieces_sizes[i], self.rs + i)
                        for i, idx in enumerate(pieces_indexes)]
-            return self.params_list, pieces_indexes, ts_list
+            return total_time, self.params_list, pieces_indexes, ts_list
 
     def generate_default_weights(self, rs):
         """
