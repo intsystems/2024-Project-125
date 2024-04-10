@@ -305,8 +305,6 @@ class Algorithm(object):
     def count_theoretical_upper(self):
         k = 0
         for idx, left, right in zip(self.generator.indexes, self.generator.stamps, self.generator.stamps[1:]):
-            # expert_num = self.generator.stamps[idx] + self.train_window
-            # self.start_losses[left:right] = self.experts_losses_all[left:right, expert_num]
             if left < self.shift:
                 continue
             k += 1
@@ -343,8 +341,7 @@ class Algorithm(object):
                 Defaults to ["regret"].
             height_ratios (list, optional): A list of height ratios for the subplots.
                 Defaults to [1 for _ in show_axes].
-            from_start (bool, optional): Whether to display the plots
-                from the beginning of the time series or after the initial experts. Defaults to True.
+            suptitle (string, optional): Title for the plot
             fig_size (tuple, optional): Figure size. Defaults to (15,10).
 
         Returns:
