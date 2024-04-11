@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
+import json
+import dataclasses_json
+import dataclasses
+
 
 from synthesizer import Synthesizer
 from generator import Generator
@@ -14,20 +17,23 @@ from hypers import alpha_hypers
 series_type = "default"
 from_start = False
 a, b = -40., 40.
-seeds = 5 * np.arange(2, 6) + 1
+seeds = 5 * np.arange(2, 3) + 1
+# train_window = 10
+noise_var = 1
+
 
 dim = 10
 low, high = -10, 10
 clip = (a, b)
-noise_var = 1
 workers_num = 3
 
-length = 1500
-lower_bound, upper_bound = 100, 400
+length = 150
+lower_bound, upper_bound = 10, 40
 alternating=True
 
 
-@dataclass
+@dataclasses_json.dataclass_json
+@dataclasses.dataclass
 class Params:
     series_type: str
     from_start: bool
@@ -38,7 +44,6 @@ class Params:
     low: int
     high: int
     clip: tuple[float, float]
-    noise_var: float
     workers_num: int
 
     length: int
@@ -47,29 +52,97 @@ class Params:
     alternating: bool
 
 
-@dataclass
+@dataclasses_json.dataclass_json
+@dataclasses.dataclass
 class Logs:
+    total_time: int
+    shift: int
+    indexes: list[int]
+    stamps: np.array
+    experts_predictions_all: np.array
+    masters_predictions_all: np.array
+
     experts_losses_all: np.array
     master_losses_all: np.array
+    zero_losses: np.array
     weights_all: np.array
     ideal_losses: np.array
     theoretical_upper: np.array
 
 
-@dataclass
+@dataclasses_json.dataclass_json
+@dataclasses.dataclass
 class Experiment:
     random_seed: int
 
     key_w: str
     key_a: str
     train_window: int
+    noise_var: float
 
     params: Params
     logs: Logs
     regret: float
 
+    @classmethod
+    def from_dictionary(cls, exp_dict):
+        params = Params(
+            series_type=exp_dict['params']['series_type'],
+            from_start=exp_dict['params']['from_start'],
+            a=exp_dict['params']['a'],
+            b=exp_dict['params']['b'],
+            dim=exp_dict['params']['dim'],
+            low=exp_dict['params']['low'],
+            high=exp_dict['params']['high'],
+            clip=tuple(exp_dict['params']['clip']),
+            workers_num=exp_dict['params']['workers_num'],
+            length=exp_dict['params']['length'],
+            lower_bound=exp_dict['params']['lower_bound'],
+            upper_bound=exp_dict['params']['upper_bound'],
+            alternating=exp_dict['params']['alternating'],
+        )
 
-def run_experiments(windows, interesting_w, interesting_a):
+        logs = Logs(
+            total_time=exp_dict['logs']['total_time'],
+            shift=exp_dict['logs']['shift'],
+            indexes=exp_dict['logs']['indexes'],
+            stamps=np.array(exp_dict['logs']['stamps']),
+            experts_predictions_all=np.array(exp_dict['logs']['experts_predictions_all']),
+            masters_predictions_all=np.array(exp_dict['logs']['masters_predictions_all']),
+            experts_losses_all=np.array(exp_dict['logs']['experts_losses_all']),
+            master_losses_all=np.array(exp_dict['logs']['master_losses_all']),
+            zero_losses=np.array(exp_dict['logs']['zero_losses']),
+            weights_all=np.array(exp_dict['logs']['weights_all']),
+            ideal_losses=np.array(exp_dict['logs']['ideal_losses']),
+            theoretical_upper=np.array(exp_dict['logs']['theoretical_upper']),
+        )
+
+        return Experiment(
+            random_seed=exp_dict['random_seed'],
+            key_w=exp_dict['key_w'],
+            key_a=exp_dict['key_a'],
+            train_window=exp_dict['train_window'],
+            noise_var=exp_dict['noise_var'],
+            params=params,
+            logs=logs,
+            regret=exp_dict['regret'],
+        )
+
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
+
+def run_experiments(windows, interesting_w, interesting_a, filepath=None):
     interesting = set()
 
     for key_w in interesting_w:
@@ -81,13 +154,13 @@ def run_experiments(windows, interesting_w, interesting_a):
     experiments = []
 
     for rs in seeds:
-        synt = Synthesizer(series_type, dim=dim, low=low, high=high, clip=clip,
-                           noise_var=noise_var, workers_num=workers_num, random_seed=rs)
-        gen = Generator(series_type, synt)
-        gen.generate(length=length, from_start=from_start,
-                     lower_bound=lower_bound, upper_bound=upper_bound, alternating=True)
-
         for train_window in windows:
+            synt = Synthesizer(series_type, dim=dim, low=low, high=high, clip=clip,
+                               noise_var=noise_var, workers_num=workers_num, random_seed=rs)
+            gen = Generator(series_type, synt)
+            gen.generate(length=length, from_start=from_start,
+                         lower_bound=lower_bound, upper_bound=upper_bound, alternating=True)
+
             for key_w, key_a in interesting:
                 hyper_w = weight_hypers[key_w]
                 hyper_a = alpha_hypers[key_a]
@@ -106,23 +179,31 @@ def run_experiments(windows, interesting_w, interesting_a):
                                 low=low,
                                 high=high,
                                 clip=clip,
-                                noise_var=noise_var,
                                 workers_num=workers_num,
                                 length=length,
                                 lower_bound=lower_bound,
                                 upper_bound=upper_bound,
                                 alternating=alternating)
 
-                logs = Logs(experts_losses_all=algo.experts_losses_all,
+                logs = Logs(total_time=algo.total_time,
+                            shift=algo.shift,
+                            indexes=gen.indexes,
+                            stamps=gen.stamps,
+                            experts_predictions_all=algo.experts_predictions_all,
+                            masters_predictions_all=algo.master_predictions_all,
+                            experts_losses_all=algo.experts_losses_all,
                             master_losses_all=algo.master_losses_all,
+                            zero_losses=algo.zero_losses,
                             weights_all=algo.weights_all,
                             ideal_losses=algo.ideal_losses,
-                            theoretical_upper=algo.theoretical_upper)
+                            theoretical_upper=algo.theoretical_upper,
+                            )
 
                 experiment = Experiment(random_seed=rs,
                                         key_w=key_w,
                                         key_a=key_a,
                                         train_window=train_window,
+                                        noise_var=noise_var,
                                         params=params,
                                         logs=logs,
                                         regret=algo.regret)
@@ -130,7 +211,18 @@ def run_experiments(windows, interesting_w, interesting_a):
                 experiments.append(experiment)
 
                 del algo
+            del gen
+            del synt
 
+    if filepath is not None:
+        with open(filepath, 'w') as f:
+            json.dump(experiments, f, cls=EnhancedJSONEncoder)
+
+    df = experiments_to_df(experiments)
+    return experiments, df
+
+
+def experiments_to_df(experiments):
     dct = {}
     for experiment in experiments:
         key = (experiment.train_window, experiment.key_w, experiment.key_a)
@@ -144,26 +236,31 @@ def run_experiments(windows, interesting_w, interesting_a):
 
     labels = ["train_window", "weight_function", "alpha_function"]
 
-    renaming={}
+    renaming = {}
     for i in list(df):
         if i < 3:
             renaming[i] = labels[i]
         else:
-            renaming[i] = f"random_{i-2}"
+            renaming[i] = f"random_{i - 2}"
 
     df = df.set_index(np.arange(df.index.size)).rename(columns=renaming)
-    ordered_repr = windows + [wh.repr for wh in weight_hypers.values()] + [ah.repr for ah in alpha_hypers.values()]
+    ordered_repr = (sorted(df['train_window'].unique()) +
+                    [wh.repr for wh in weight_hypers.values()] +
+                    [ah.repr for ah in alpha_hypers.values()])
     df = df.sort_values(labels, key=lambda col: col.apply(lambda x: ordered_repr.index(x)))
     df.insert(3, "mean", df.iloc[:, 3:].mean(axis=1))
     df["mean"] = df["mean"].astype(float).round(2)
+    return df
+
+
+def load_experiments(filepath):
+    with open(filepath, 'r') as f:
+        data = json.load(f)
+        experiments = [Experiment.from_dictionary(dct) for dct in data]
+
+    df = experiments_to_df(experiments)
 
     return experiments, df
-
-
-
-
-
-
 
 
 

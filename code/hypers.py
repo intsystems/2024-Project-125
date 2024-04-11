@@ -101,6 +101,14 @@ def default_alpha_func(x):
     return 1 / (x + 1)
 
 
+def alpha_func_01(x):
+    return 1 / (x + 1) ** 0.1
+
+
+def alpha_func_05(x):
+    return 1 / (x + 1) ** 0.5
+
+
 def alpha_func_11(x):
     return 1 / (x + 1) ** 1.1
 
@@ -137,6 +145,14 @@ def alpha_func_3(x):
     return 1 / (x + 1) ** 3
 
 
+def alpha_func_shift_5(x):
+    return 1 / (x + 5)
+
+
+def alpha_func_shift_25(x):
+    return 1 / (x + 25)
+
+
 def alpha_crook_func(x):
     return 1 / ((x + 1) * np.square(np.log(x + 1)))
 
@@ -161,6 +177,8 @@ class AlphaHyper:
 
 alpha_hypers = {
     "default": AlphaHyper(default_alpha_func, "1 / (x + 1)"),
+    "simple_01": AlphaHyper(alpha_func_01, "1 / (x + 1)^0.1"),
+    "simple_05": AlphaHyper(alpha_func_05, "1 / (x + 1)^0.5"),
     "simple_11": AlphaHyper(alpha_func_11, "1 / (x + 1)^1.1"),
     "simple_12": AlphaHyper(alpha_func_12, "1 / (x + 1)^1.2"),
     "simple_13": AlphaHyper(alpha_func_13, "1 / (x + 1)^1.3"),
@@ -170,6 +188,8 @@ alpha_hypers = {
     "simple_17": AlphaHyper(alpha_func_17, "1 / (x + 1)^1.7"),
     "simple_2": AlphaHyper(alpha_func_2, "1 / (x + 1)^2)"),
     "simple_3": AlphaHyper(alpha_func_3, "1 / (x + 1)^3"),
+    "shift_5": AlphaHyper(alpha_func_shift_5, "1 / (x + 5)"),
+    "shift_25": AlphaHyper(alpha_func_shift_25, "1 / (x + 25)"),
     "crook": AlphaHyper(alpha_crook_func, "1 / ((x + 1)*(ln(x + 1))^2)"),
     "log": AlphaHyper(alpha_log_func, "1 / ln(x + 1)"),
     "exp": AlphaHyper(alpha_exp_func, "1 / e^x"),

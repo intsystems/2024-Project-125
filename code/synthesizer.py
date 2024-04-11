@@ -5,7 +5,7 @@ import numpy as np
 from random import uniform
 
 
-def generate_default_time_series(weights, clip, n, rs):
+def generate_default_time_series(weights, clip, n, noise_var, rs):
     """
     Generates a synthetic time series using a linear model with Gaussian noise.
 
@@ -24,7 +24,7 @@ def generate_default_time_series(weights, clip, n, rs):
     final_responses = np.empty(0)
     while final_responses.size < n:
         signals = np.random.normal(0, 1, size=(n, dim))
-        noise_var = 1
+        # noise_var = 1
         noise = np.random.normal(0, noise_var, n)
         responses = signals @ weights + noise
         if clip is not None:
@@ -192,7 +192,7 @@ class Synthesizer(object):
         total_time = sum(pieces_sizes)
         if self.series_type == "default":
             self.params_list = [self.generate_default_weights(self.rs + i) for i in range(self.workers_num)]
-            ts_list = [generate_default_time_series(self.params_list[idx], self.clip, pieces_sizes[i], self.rs + i)
+            ts_list = [generate_default_time_series(self.params_list[idx], self.clip, pieces_sizes[i], self.noise_var, self.rs + i)
                        for i, idx in enumerate(pieces_indexes)]
             return total_time, self.params_list, pieces_indexes, ts_list
         if self.series_type == "arima":
