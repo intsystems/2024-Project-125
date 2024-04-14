@@ -66,11 +66,18 @@ def weights_exp4_func(x):
     return np.exp(-x / 4) / CONST_EXP_4
 
 
-CONST_SLOW = 0.87256  # approx sum
+CONST_SLOW = 2.3533  # approx sum
 
 
 def weights_func_slow(x):
-    return 1 / ((x + 2) * np.log(x + 2) * np.square(np.log(np.log(x + 2)))) / CONST_SLOW
+    return 1 / ((x + 4) * np.log(x + 4) * np.square(np.log(np.log(x + 4)))) / CONST_SLOW
+
+
+CONST = 3000.
+
+
+def weights_func_const(x):
+    return (1 - 0.00001 * x) / CONST
 
 
 @dataclass
@@ -90,7 +97,8 @@ weight_hypers = {
     "simple_2": WeightsHyper(CONST_2, weights_func_2, "1 / (x^2)"),
     "simple_3": WeightsHyper(CONST_3, weights_func_3, "1 / (x^3)"),
     "exp_4": WeightsHyper(CONST_EXP_4, weights_exp4_func, "1 / e^(1/4)"),
-    "slow": WeightsHyper(CONST_SLOW, weights_func_slow, "1 / ((x + 1) * ln(x + 1) * (ln(ln(x + 1)))^2"),
+    "slow": WeightsHyper(CONST_SLOW, weights_func_slow, "1 / ((x + 4) * ln(x + 4) * (ln(ln(x + 4)))^2"),
+    "const": WeightsHyper(CONST, weights_func_const, "1 / c"),
 }
 
 

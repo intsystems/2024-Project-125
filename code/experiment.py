@@ -17,7 +17,7 @@ from hypers import alpha_hypers
 series_type = "default"
 from_start = False
 a, b = -40., 40.
-seeds = 5 * np.arange(2, 3) + 1
+seeds = 5 * np.arange(2, 4) + 11
 # train_window = 10
 noise_var = 1
 
@@ -27,8 +27,8 @@ low, high = -10, 10
 clip = (a, b)
 workers_num = 3
 
-length = 150
-lower_bound, upper_bound = 10, 40
+length = 2000
+lower_bound, upper_bound = 100, 400
 alternating=True
 
 
@@ -214,11 +214,13 @@ def run_experiments(windows, interesting_w, interesting_a, filepath=None):
             del gen
             del synt
 
-    if filepath is not None:
-        with open(filepath, 'w') as f:
-            json.dump(experiments, f, cls=EnhancedJSONEncoder)
-
     df = experiments_to_df(experiments)
+
+    if filepath is not None:
+        df.to_csv(filepath, sep='\t')
+        # with open(filepath, 'w') as f:
+            # json.dump(experiments, f, cls=EnhancedJSONEncoder)
+
     return experiments, df
 
 
@@ -261,7 +263,4 @@ def load_experiments(filepath):
     df = experiments_to_df(experiments)
 
     return experiments, df
-
-
-
 
