@@ -1,5 +1,54 @@
 \documentclass[12pt, twoside]{article}
 \usepackage{jmlda}
+\usepackage{amsfonts}
+%\usepackage{algorithm}
+%\usepackage{algcompatible}
+\usepackage{algorithmic}
+\usepackage{booktabs,siunitx}
+\graphicspath{{../figures/}}
+
+\raggedbottom
+
+\usepackage{float}
+
+
+\usepackage{algorithm}
+\usepackage{lipsum}
+
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother
+
+%\usepackage{algpseudocode}
+%\usepackage{array,calc}
+%\usepackage{longtable,tabu}
+%\usepackage{tabularray}
+%\usepackage{caption}
+%\usepackage{diagbox}
+%\usepackage{multirow}
+%\newlength{\dig}
+%\settowidth{\dig}{6}
+
+
+\renewcommand{\thealgorithm}{}
+
 \newcommand{\hdir}{.}
 
 
@@ -9,12 +58,12 @@
 \English
 
 \title
-	[My first scientific paper] % short title for page headings, not necessary if a full title fits the headings
+    [] % short title for page headings, not necessary if a full title fits the headings
     {Influence of hyperparameters on aggregating predictions of infinite number of experts} % full title
 \author
-	[S.\,M.~Kunin-Bogoiavlenskii] % short list of the authors (<= 3) for page headings, is necessary only if the full list does not fit the headings
+    [S.\,M.~Kunin-Bogoiavlenskii] % short list of the authors (<= 3) for page headings, is necessary only if the full list does not fit the headings
 %S.M. Kunin-Bogoiavlenskii, A.V. Zukhba, and R.D. Zukhba
-	{S.\,M.~Kunin-Bogoiavlenskii, A.\,V.~Zukhba, R.\,D.~Zukhba, and V.\,V.~V’yugin} % full list of the authors, presented in the table of contetns of the issue
+    {S.\,M.~Kunin-Bogoiavlenskii, A.\,V.~Zukhba, R.\,D.~Zukhba, and V.\,V.~V’yugin} % full list of the authors, presented in the table of contetns of the issue
     [S.\,M.~Kunin-Bogoiavlenskii, A.\,V.~Zukhba] % list of the authors presented in the title page of the article, is necessary only if it differs from the full list of the authors in braces, i.e. '{' and '}'
 \email
     {kunin-bogoiavlenskii.sm@phystech.edu; a\_\_l@mail.ru}
@@ -27,26 +76,26 @@
 \abstract
     {
     
-	Using aggregation of expert forecasts is one of the important methods to improve prediction accuracy. 
-	This paper focuses on examining the influence of hyperparameters on the accuracy of the aggregation algorithm with an infinite number of experts.
-	We implemented a time series generator with specified properties and an aggregating forecasting model. 
-	We conducted a series of experiments with various hyperparameters of the algorithm.
-	Finding optimal hyperparameters leads to high performance and wider adoption of this prediction method.
-	    	
-%	\noindent
-%	\textbf{Background}:	One paragraph about the problem, existent approaches and its limitations.
-%	
-%	\noindent
-%	\textbf{Methods}: One paragraph about proposed method and its novelty.
-%	
-%	\noindent
-%	\textbf{Results}: One paragraph about major properties of the proposed method and experiment results if applicable.
-%	
-%	\noindent
-%	\textbf{Concluding Remarks}: One paragraph about the place of the proposed method among existent approaches.
-%				
-	\noindent
-    	\textbf{Keywords}: \emph{online learning; aggregating algorithm; prediction with experts’ advice; Fixed Share, Mixing Past Posteriors (MPP)}}
+    Using aggregation of expert forecasts is one of the important methods to improve prediction accuracy. 
+    This paper focuses on examining the influence of hyperparameters on the accuracy of the aggregation algorithm with an infinite number of experts.
+    We implement a time series generator with specified properties and an aggregating forecasting model. 
+    We conduct a series of experiments with various hyperparameters of the algorithm.
+    Finding optimal hyperparameters leads to high performance and wider adoption of this prediction method.
+            
+%   \noindent
+%   \textbf{Background}:    One paragraph about the problem, existent approaches and its limitations.
+%   
+%   \noindent
+%   \textbf{Methods}: One paragraph about proposed method and its novelty.
+%   
+%   \noindent
+%   \textbf{Results}: One paragraph about major properties of the proposed method and experiment results if applicable.
+%   
+%   \noindent
+%   \textbf{Concluding Remarks}: One paragraph about the place of the proposed method among existent approaches.
+%               
+    \noindent
+        \textbf{Keywords}: \emph{online learning; aggregating algorithm; prediction with experts’ advice; Fixed Share, Mixing Past Posteriors (MPP)}}
 
 %these fields are filled in by the journal editors
 %\doi{10.21469/22233792}
@@ -59,8 +108,8 @@
 \section{Introduction}
 %\noindent %this command is placed at the beginning of the first sentence of each paragraph/section only.
 This work is inspired by the algorithm, developed in the article \cite{article}, considering online game of prediction with experts' advice. The data is presented as a time series, consisting of outcome pairs --- <<signal>> and <<response>>. 
-In contrast to the classical statistical theory of sequential prediction, we made no assumptions about the nature of the data (which could be deterministic, stochastic, etc.). 
-We used machine learning methods to build forecasters within a game-theoretic approach.
+In contrast to the classical statistical theory of sequential prediction, we make no assumptions about the nature of the data (which could be deterministic, stochastic, etc.). 
+We use machine learning methods to build forecasters within a game-theoretic approach.
 The online learning master model considers a series of reference forecasters, referred to as experts, to build its opinion by combining their predictions.
 
 
@@ -74,20 +123,38 @@ The difference between the master's cumulative losses and the expert's cumulativ
 The traditional goal of the aggregating algorithm is to keep it as small as possible.
 
 %\noindent
-We use special assumptions about the data generation structure when building forecasting strategies. It is assumed that there are multiple generators, whose structure is unknown to the predictors. These generators switch, producing a time series that is subdivided into a sequence of segments - areas of stationarity, which can be studied using machine learning methods. Each corresponding local predictive model will be constructed based on data from the area of stationarity and can be then successfully applied in other areas of stationarity generated by the same generator.
+We use special assumptions about the data generation structure when building forecasting strategies. 
+It is assumed that there are multiple generators, whose structure is unknown to the predictors. 
+The time series is obtained by merging segments, each produced by one of the generators. 
+These segments are called areas of stationarity, and can be studied using machine learning methods.
+%These generators switch, producing a time series that is subdivided into a sequence of segments --- areas of stationarity, which can be studied using machine learning methods. 
+Each corresponding local predictive model will be constructed based on data from the area of stationarity and can be then successfully applied in other areas of stationarity generated by the same generator.
 
 %\noindent
-In this formulation of the forecasting problem, the series of prediction steps is divided into segments that frame arbitrary sequences of expert strategies. The sequence of segments and its associated sequence of experts is called a partition. The modified goal of the aggregating algorithm is to perform well relative to the best partition. Accordingly, the new concept of algorithm regret is the difference between the algorithm's losses and the cumulative losses of the sequence of experts. This change allows for a more accurate modeling of real-life conditions, where the nature of outcomes may change over time and different experts may predict with varying degrees of success depending on the current trend. 
+In this formulation of the forecasting problem, the series of prediction steps is divided into segments that frame arbitrary sequences of expert strategies. 
+The sequence of segments and its associated sequence of experts is called a partition. 
+The modified goal of the aggregating algorithm is to perform well relative to the best partition. 
+Accordingly, the new concept of algorithm regret is the difference between the algorithm's losses and the cumulative losses of the sequence of experts. 
+This change allows for a more accurate modeling of real-life conditions, where the nature of responses may change over time and different experts may predict with varying degrees of success depending on the current trend. 
 
 %\noindent
-The corresponding algorithm is called Fixed Share \cite{article98}. A further proposed generalization of it is the Mixing Past Posteriors (MPP) method \cite{article02}. The cumulative losses of the aggregating algorithm are related to convex combinations of expert losses. The concept of regret also changes. Now the algorithm's cumulative losses are compared to the cumulative losses of convex combinations of expert strategies.
+The corresponding algorithm is called Fixed Share \cite{article98}. 
+A further proposed generalization of it is the Mixing Past Posteriors (MPP) method \cite{article02}. 
+The cumulative losses of the aggregating algorithm are related to convex combinations of expert losses. 
+The concept of regret also changes. 
+Now the algorithm's cumulative losses are compared to the cumulative losses of convex combinations of expert strategies.
 
-A characteristic feature of the problem considered in \cite{article} is the absence of a predefined set of competing expert strategies, as was the case in the works cited above. Instead, new expert strategies are constructed at each step of the online learning process. The master must aggregate the forecasts of all expert strategies constructed up to that time in real-time at each step. Algorithm GMPP, proposed in \cite{article}, is the foundation of our experiments. 
+A characteristic feature of the problem considered in \cite{article} is the absence of a predefined set of competing expert strategies, as was the case in the works cited above.
+Instead, new expert strategies are constructed at each step of the online learning process.
+The master must aggregate the forecasts of all expert strategies constructed up to that time in real-time at each step. 
+Algorithm GMPP, proposed in \cite{article}, is the foundation of our experiments. 
 
 \section{Problem statement}
 \paragraph{Definitions}
 Let $x_1, x_2, \dots$ be the sequence of signals belonging to the sample space  $\mathsf{X}$. 
-The forecaster's goal is to predict the sequence of the corresponding responces $y_1, y_2, \dots$ belonging to the outcome space $\mathsf{Y}$. 
+The masters goal is to predict the sequence of the corresponding responces $y_1, y_2, \dots$ belonging to the outcome space $\mathsf{Y}$. 
+We assume that the master knows $a, b \in \RR$ --- the bounds of the responces sequence, s.t. $\forall i\quad a \leq y_i \leq b$.
+
 We assume that there is an infinite number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
 The predictions of the master and experts belong to the decision space $\mathsf{D}$. 
 Let $ \lambda: \mathsf{D} \times \mathsf{Y} \rightarrow \RR_+$ be the nonnegative loss function. 
@@ -97,52 +164,165 @@ After obtaining them the master gives his prediction $p_t = p_t(x_t) \in \mathsf
 Next, the generator reveals the true outcome $y_t$, and the losses are computed.
 Let $l_t^i = \lambda(f_t^i, y_t)$ be the loss of expert $i$, and $h_t = \lambda(p_t, y_t)$ be the master's loss 
 
-Using designations $L_T^i = \sum_{t = 1}^T l_t^i$ --- the cumulative loss of expert $i$ during the first T steps, and $H_T = \sum_{t = 1}^T h_t$ --- the master's cumulative loss during the first T steps, we can define the master's regret relative to the expert $i$ as $R^i_t = H_T - L^i_T$
-\paragraph{Data generator}
- 
-\paragraph{Algorithm GMPP}
-\textbf{Initialization}: Initialize the weights $w^i_1$ so that $\sum_{i \in \mathcal{N}}w^i_1 = 1$
+With designations $L_T^i = \sum_{t = 1}^T l_t^i$, representing the cumulative loss of expert $i$ during the first T steps, and $H_T = \sum_{t = 1}^T h_t$, 
+representing the master's cumulative loss during the first T steps, we can define the master's regret relative to the expert $i$ as $R^i_t = H_T - L^i_T$. 
 
-\textbf{FOR} $t = 1, 2, \dots$:
-\begin{enumerate}[leftmargin=4em]
-\item Expert $f^t$ initialization
-\item Signal $x_t$ received from the generator 
-\item Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
-\item Compute normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-\item Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
-\item Generator reveals true outcome $y_t$
-\item Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
+%\paragraph{Data}
+ 
+\paragraph{Aggregating algorithm}
+\vspace{5mm}
+
+\begin{breakablealgorithm}
+\caption{GMPP}
+\begin{algorithmic}
+\STATE Initialize the weights $w^i_1$ so that $\sum\limits_{i \in \mathcal{N}}w^i_1 = 1$
+\FOR{$t = 1, 2, \dots$}
+
+  
+\STATE\textbf{\textperiodcentered}~ Expert $f^t$ initialization
+\STATE\textbf{\textperiodcentered}~ Signal $x_t$ is received 
+\STATE\textbf{\textperiodcentered}~ Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
+\STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
+\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\STATE\textbf{\textperiodcentered}~ True outcome $y_t$ is revealed
+\STATE\textbf{\textperiodcentered}~ Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
 \begin{cases}
         \lambda(f_t^i, y_t), & \text{if $i \le t$} \\
         h_t, & \text{if $i > t$}
 \end{cases}$
-%\item Modify experts' weights in two steps:
-
-\item \textbf{Loss Update} weights modification
+\STATE\textbf{\textperiodcentered}~ \textbf{Loss Update} weights modification
 \[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
-\item \textbf{Mixing Update} weights modification
+\STATE\textbf{\textperiodcentered}~ \textbf{Mixing Update} weights modification
 \[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t\widetilde{w}_t^i)\] 
-\end{enumerate}
 
-\textbf{ENDFOR}
-
-\bigskip
-It was proved in \cite{article} that for $\alpha = \frac1{t + 1}$ and any partition of $k+1$ experts, the following is true  (where $L_T(E)$ is the cumulative loss of partition $E$) :
-\[ \limsup_{T \to \infty} \dfrac{H_T - L_T(E)}{T} = 0\] 
-
-This allows formulating the main assumption underlying the application of the GMPP algorithm: In cases where it is possible to <<attach>> a valid predictive (expert) strategy to each local sub-sample from the generation area, carrying small losses on each local sub-sample generated by the generator, i.e., <<learn>> this generator, the GMPP algorithm will also predict with sufficiently small losses on the entire sample.
-
-% \begin{aligned} \begin{cases}
+\ENDFOR
 
 
+\end{algorithmic}
+\end{breakablealgorithm} 
 
-%\begin{equation}
-%    \begin{cases}
-%      k_{i\omega}/k_{p\omega}=2\pi\times 10\\
-%      \left\lvert\frac{k_{p\omega}s+k_{i\omega}}{s}\cdot\frac{1}{Ts+1}\right\rvert_{S=\mathrm{j}\cdot2\pi}=1
-%    \end{cases}\,.
-%\end{equation}
 
+%\textbf{Initialization}: Initialize the weights $w^i_1$ so that $\sum_{i \in \mathcal{N}}w^i_1 = 1$
+%
+%\textbf{FOR} $t = 1, 2, \dots$:
+%\begin{enumerate}[leftmargin=4em]
+%\item Expert $f^t$ initialization
+%\item Signal $x_t$ received from the generator 
+%\item Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
+%\item Compute normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
+%\item Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+%\item Generator reveals true outcome $y_t$
+%\item Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
+%\begin{cases}
+%        \lambda(f_t^i, y_t), & \text{if $i \le t$} \\
+%        h_t, & \text{if $i > t$}
+%\end{cases}$
+%%\item Modify experts' weights in two steps:
+%
+%\item \textbf{Loss Update} weights modification
+%\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
+%\item \textbf{Mixing Update} weights modification
+%\[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t\widetilde{w}_t^i)\] 
+%\end{enumerate}
+%
+%\textbf{ENDFOR}
+
+%\bigskip
+%It was proved in \cite{article} that for $\alpha = \frac1{t + 1}$ and any partition of $k+1$ experts, the following is true  (where $L_T(E)$ is the cumulative loss of partition $E$) :
+%\[ \limsup_{T \to \infty} \dfrac{H_T - L_T(E)}{T} = 0.\] 
+%
+%This allows formulating the main assumption underlying the application of the GMPP algorithm: 
+%In cases where it is possible to <<attach>> a valid predictive (expert) strategy to each local sub-sample from the generation area, carrying small losses on each local sub-sample generated by the generator, i.e., <<learn>> this generator, the GMPP algorithm will also predict with sufficiently small losses on the entire sample.
+
+
+\section{Experiment}
+We implement the synthetic time series generator and the GMPP algorithm itself. 
+We then conduct experiments to analyze the effects of varying hyperparameters.
+\subsection{Data generation}
+
+We define generators $G_1, G_2, \dots, G_k$ by their weight vectors $\vec w_1, \vec w_2, \dots, \vec w_k \in \RR^d$. 
+Here, $d$ represents the dimensionality of the data.
+
+We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_n \sim \mathcal{N}(0, I_d)$, indicating they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
+
+This series of vectors is then randomly divided into a sequence of segments. 
+We denote these segments as $S_1, S_2, \dots, S_m$. 
+Each segment $S_i$ is a sequence of vectors itself, containing elements from $\vec x_1$ to $\vec x_{s_i}$ (where $s_i$ is the index of the last element in segment $i$ ). 
+Importantly, each segment $S_i$ is assigned to a specific generator $G_{g(i)}$ according to a random function $g$. 
+This function determines which generator is responsible for creating responses for that segment.
+
+Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_n$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i), \vec x_i} \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, 1)$ 
+
+\subsection{Experts}
+
+Each expert $f_t$ is initialized as a linear regression model. This model is trained on a fixed window of $l$ past observations. The training process yields a weight vector, which is calculated as  $\theta_t = (\vec X^T\vec X)^{-1}\vec X^T\vec y$,\ where $\vec X^T = (\vec x_{t-1}, \vec x_{t-2}, \dots \vec x_{t-l}),\ \vec y = (y_{t-1}, y_{t-2}, \dots y_{t-l})$. 
+
+Given a new signal vector  $\vec x$, the expert's prediction is obtained by calculating the dot product between the weight vector and the signal vector: $f_t(\vec x) = \langle \vec \theta_t, \vec x \rangle$ 
+
+The <<ideal expert>> is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the ideal expert's predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment).
+\newpage
+\subsection{Hyperparameters}
+We run algorithm with various hyperparameters. As a metric of quality we use master's regret relative to the <<ideal expert>>.
+
+\textbf{Initialization weights}
+
+\hspace*{3mm} Default weights: $w_1^t= \frac{1}{(i+1)\ln^2(t+1)}$
+
+\hspace*{3mm} Experimental: $\frac{1}{t^\alpha}$, $\frac{1}{(t+1)\ln(t+1)\ln^2\ln(t+c)}, \frac{1}{e^t}$, etc.
+
+\textbf{Window size}
+
+\hspace*{3mm} As the algorithm does not know the locations of generator switches, finding an optimal training window is also a challenge.
+
+\textbf{Mixing update coefficients}
+
+\hspace*{3mm} Default coefficient: $\alpha_t = \frac{1}{t+1}$
+
+\hspace*{3mm} Experimental:  $\frac{1}{(t+1)^\beta}, \frac{1}{t+c}$, etc.
+
+\section{Results}
+
+
+
+
+\begin{table}[h]
+\centering
+
+\begin{tabular}{r|ccc}
+
+ &
+\multicolumn{2}{c}{Weight function} \\
+
+\toprule {Window size}  &
+%\toprule \backslashbox{$l$}{$w^t_1$}   &
+\centering $\dfrac{1}{(t+1)\ln^2(t+1)}$ &
+\centering $\dfrac1{t^{1.01}}$  & \tabularnewline
+%\centering $\dfrac1{c}$  & 
+%\midrule
+%\hspace*{6mm}
+%Window size &  &  &  &  \\
+\midrule
+5 &  188586.09 & 141788.84 \\ %& 113612.93 \\
+10 &  136360.61 &\ 94758.81 \\ %&\ 83776.19 \\
+20 &  129543.68 &\ 93456.18 \\ %& 114114.46 \\
+50 &  143610.19 &\ 97600.05 \\ %& 123485.38 \\
+100 & 151434.18 & 101551.31 \\ %& 126436.54 \\
+200 & 164746.91 & 113835.86 \\ %& 137111.18 \\
+\bottomrule
+\end{tabular}
+\caption{Regret for different weight functions} \hspace{16cm}
+\end{table}
+
+
+
+
+
+
+
+
+\includegraphics[width=1\linewidth]{improvement3}
+
+\section{Conclusion}
 
 %\noindent
 %$\mathsf{X}$ --- sample space to which the sequence of signals $x_1, x_2, \dots$ belongs\\
@@ -176,12 +356,6 @@ This allows formulating the main assumption underlying the application of the GM
 %\section{Structure of the article}
 %\noindent
 %Divide your article into clearly defined and numbered sections and paragraphs.
-%
-%\paragraph{Paragraph}
-%\noindent
-%Sections and paragraphs are numbered and have a brief heading.
-
-%please do not change the name of this section if it is present
 
 %\section{Concluding Remarks}
 %This section should provide the summary and explore the significance of the results achieved and list problems not yet solved.
@@ -193,72 +367,72 @@ This allows formulating the main assumption underlying the application of the GM
 \begin{thebibliography}{99}
 
 \bibitem{book}
-	\BibAuthor{N.\,Cesa-Bianchi, G.\,Lugosi}. 2006.
-	\BibTitle{Prediction, Learning, and Games}.
-	Available at: \BibUrl{https://ii.uni.wroc.pl/~lukstafi/pmwiki/uploads/AGT/Prediction_Learning_and_Games.pdf}
-	
+    \BibAuthor{N.\,Cesa-Bianchi, G.\,Lugosi}. 2006.
+    \BibTitle{Prediction, Learning, and Games}.
+    Available at: \BibUrl{https://ii.uni.wroc.pl/~lukstafi/pmwiki/uploads/AGT/Prediction_Learning_and_Games.pdf}
+    
 \bibitem{ebook}
-	\BibAuthor{Hyndman,\,R.\,J. \& Athanasopoulos,\,G., 2nd edition}. 2018.
-	\BibTitle{Forecasting: Principles and Practice}.
-	\BibJournal{OTexts: Melbourne, Australia} .
-	Available at: \BibUrl{https://otexts.com/fpp2/}
-	
-	
+    \BibAuthor{Hyndman,\,R.\,J. \& Athanasopoulos,\,G., 2nd edition}. 2018.
+    \BibTitle{Forecasting: Principles and Practice}.
+    \BibJournal{OTexts: Melbourne, Australia} .
+    Available at: \BibUrl{https://otexts.com/fpp2/}
+    
+    
 \bibitem{vvbook}
-	\BibAuthor{V.\,V'yugin}. 2022.
-	Matematicheskie osnovy mashinnogo obucheniya i prognozirovaniya	
-	[Mathematical Foundations of Machine Learning and Forecasting].
-	Available at: \BibUrl{http://iitp.ru/upload/publications/6256/vyugin1.pdf}
+    \BibAuthor{V.\,V'yugin}. 2022.
+    Matematicheskie osnovy mashinnogo obucheniya i prognozirovaniya 
+    [Mathematical Foundations of Machine Learning and Forecasting].
+    Available at: \BibUrl{http://iitp.ru/upload/publications/6256/vyugin1.pdf}
 
 \bibitem{article}
-	\BibAuthor{V.\,V’yugin, V.\,Trunov}. 2023.
-	Prognozirovanie lokal'no statsionarnykh dannykh s ispol'zovaniem predskazanii ekspertnykh strategiy
-	[Prediction of Locally Stationary Data Using Prediction with
+    \BibAuthor{V.\,V’yugin, V.\,Trunov}. 2023.
+    Prognozirovanie lokal'no statsionarnykh dannykh s ispol'zovaniem predskazanii ekspertnykh strategiy
+    [Prediction of Locally Stationary Data Using Prediction with
 Expert Advice].
-	Available at: \BibUrl{http://www.jip.ru/2023/470-487-2023.pdf}
-	
+    Available at: \BibUrl{http://www.jip.ru/2023/470-487-2023.pdf}
+    
 \bibitem{article98}
-	\BibAuthor{M.\,Herbster, M.\,Warmuth}. 1998.
-	\BibTitle{Tracking the best expert}.
-	Available at: \BibUrl{https://link.springer.com/content/pdf/10.1023/A:1007424614876.pdf}
-	
+    \BibAuthor{M.\,Herbster, M.\,Warmuth}. 1998.
+    \BibTitle{Tracking the best expert}.
+    Available at: \BibUrl{https://link.springer.com/content/pdf/10.1023/A:1007424614876.pdf}
+    
 \bibitem{article02}
-	\BibAuthor{O.\,Bousquet, M.\,Warmuth}. 2002.
-	\BibTitle{Tracking a small set of experts by mixing past posteriors}.
-	Available at: \BibUrl{https://www.jmlr.org/papers/volume3/bousquet02b/bousquet02b.pdf}
+    \BibAuthor{O.\,Bousquet, M.\,Warmuth}. 2002.
+    \BibTitle{Tracking a small set of experts by mixing past posteriors}.
+    Available at: \BibUrl{https://www.jmlr.org/papers/volume3/bousquet02b/bousquet02b.pdf}
 %
 %
 %\bibitem{webArticle}
-%	\BibAuthor{Blaga,~P.\,A.} 2007.
-%	Commutative Diagrams with XY-pic II. Frames and Matrices.
-%	\BibJournal{PracTEX J.}  4.
-%	Available at: \BibUrl{https://tug.org/pracjourn/2007-1/blaga/blaga.pdf}
+%   \BibAuthor{Blaga,~P.\,A.} 2007.
+%   Commutative Diagrams with XY-pic II. Frames and Matrices.
+%   \BibJournal{PracTEX J.}  4.
+%   Available at: \BibUrl{https://tug.org/pracjourn/2007-1/blaga/blaga.pdf}
 %    (accessed February 20, 2007).
 %
 %\bibitem{webResource}
-%	XYpic.
-%	Available at: \BibUrl{http://akagi.ms.u-tokyo.ac.jp/input9.pdf}
-%	(accessed April 09, 2015).
+%   XYpic.
+%   Available at: \BibUrl{http://akagi.ms.u-tokyo.ac.jp/input9.pdf}
+%   (accessed April 09, 2015).
 %
 %\bibitem{inproceedingsRus}
-%	\BibAuthor{Usmanov,~T.\,S., A.\,A.~Gusmanov, I.\,Z.~Mullagalin, R.\,Yu.~Mukhametshina, A.\,N.~Chervyakova, and A.\,V.~Sveshnikov.} 2007.
-%	Osobennosti proektirovaniya razrabotki mestorozhdeniy s primeneniem gidrorazryva plasta
-%	[Features of the design of field development with the use of hydraulic fracturing].
-%	\BibJournal{6th Symposium (International) ``New Energy Saving Subsoil Technologies and the
-%	Increasing of the Oil and Gas Impact'' Proceedings}.
-%	Moscow:~Publisher. 267--272. (In Russian)
-%	   	
+%   \BibAuthor{Usmanov,~T.\,S., A.\,A.~Gusmanov, I.\,Z.~Mullagalin, R.\,Yu.~Mukhametshina, A.\,N.~Chervyakova, and A.\,V.~Sveshnikov.} 2007.
+%   Osobennosti proektirovaniya razrabotki mestorozhdeniy s primeneniem gidrorazryva plasta
+%   [Features of the design of field development with the use of hydraulic fracturing].
+%   \BibJournal{6th Symposium (International) ``New Energy Saving Subsoil Technologies and the
+%   Increasing of the Oil and Gas Impact'' Proceedings}.
+%   Moscow:~Publisher. 267--272. (In Russian)
+%       
 %\bibitem{inproceedingsEng}
 %    \BibAuthor{Author,~N.} 2009.
 %    Paper title.
 %    \BibJournal{10th Conference (International) on Any Science Proceedings}.
 %    Place of publication: Publisher. 111--122.
-%	
+%   
 %\bibitem{techreport}
-%	\BibAuthor{Lambert,~P.} 1993.
-%  	\BibTitle{The title of the work}.
-%  	Place of publication:~The institution that published.  Report~2.
-  	     	
+%   \BibAuthor{Lambert,~P.} 1993.
+%   \BibTitle{The title of the work}.
+%   Place of publication:~The institution that published.  Report~2.
+            
 \end{thebibliography}
 
 \end{document}

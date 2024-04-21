@@ -45,8 +45,8 @@
 \RequirePackage[displaymath,mathlines]{lineno}
 \RequirePackage{array}
 \RequirePackage{theorem}
-\RequirePackage[ruled]{algorithm}
-\RequirePackage[noend]{algorithmic}
+%\RequirePackage[ruled]{algorithm}
+%\RequirePackage[noend]{algorithmic}
 \RequirePackage[all]{xy}
 \RequirePackage{graphicx}
 \RequirePackage{epstopdf}
@@ -617,7 +617,7 @@
 \providecommand\bibsection[1]{\par\typeBibliographySection{#1}\@afterheading}
 
 \renewcommand\subsection[1]{\par\typeParagraph{#1}\@afterheading}
-\renewcommand\subsubsection[1]{\par\typeParagraph{#1}\@afterheading}
+%\renewcommand\subsubsection[1]{\par\typeParagraph{#1}\@afterheading}
 \renewcommand\paragraph[1]{\par\typeParagraph{#1}\@afterheading}
 \renewcommand\subparagraph[1]{\par\typeParagraph{#1}\@afterheading}
 
@@ -849,7 +849,7 @@
   \setcounter{equation}{0}%
   \setcounter{table}{0}%
   \setcounter{figure}{0}%
-  \setcounter{algorithm}{0}%
+%  \setcounter{algorithm}{0}%
   \setcounter{footnote}{0}%
   \setcounter{Theorem}{0}%
   \setcounter{State}{0}%
@@ -1659,56 +1659,56 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % переопределения (русификация) управляющих конструкций:
-\newcommand{\algKeyword}[1]{{\bf #1}}
-\renewcommand{\algorithmicrequire}{\rule{0pt}{2.5ex}\algKeyword{\ruseng{Вход:}{Require:}}}
-\renewcommand{\algorithmicensure}{\algKeyword{\ruseng{Выход:}{Ensure:}}}
-\renewcommand{\algorithmicend}{\algKeyword{\ruseng{конец}{end}}}
-\renewcommand{\algorithmicif}{\algKeyword{\ruseng{если}{if}}}
-\renewcommand{\algorithmicthen}{\algKeyword{\ruseng{то}{then}}}
-\renewcommand{\algorithmicelse}{\algKeyword{\ruseng{иначе}{else}}}
-\renewcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
-\renewcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
-\renewcommand{\algorithmicfor}{\algKeyword{\ruseng{для}{for}}}
-\renewcommand{\algorithmicforall}{\algKeyword{\ruseng{для всех}{for all}}}
-\renewcommand{\algorithmicdo}{}
-\renewcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
-\renewcommand{\algorithmicwhile}{\algKeyword{\ruseng{пока}{while}}}
-\renewcommand{\algorithmicendwhile}{\algorithmicend\ \algorithmicwhile}
-\renewcommand{\algorithmicloop}{\algKeyword{\ruseng{цикл}{loop}}}
-\renewcommand{\algorithmicendloop}{\algorithmicend\ \algorithmicloop}
-\renewcommand{\algorithmicrepeat}{\algKeyword{\ruseng{повторять}{repeat}}}
-\renewcommand{\algorithmicuntil}{\algKeyword{\ruseng{пока}{until}}}
-%\renewcommand{\algorithmiccomment}[1]{{\footnotesize // #1}}
-\renewcommand{\algorithmiccomment}[1]{{\quad\sl // #1}}
-
-% Мои дополнительные команды для описания алгоритмов
-\newcommand{\Procedure}[1]{{\tt #1}}
-\newcommand{\Proc}[1]{\text{\tt #1}}
-\def\BEGIN{\\[1ex]\hrule\vskip 1ex}
-\def\PARAMS{\renewcommand{\algorithmicrequire}{\algKeyword{\ruseng{Параметры:}{Parameters:}}}\REQUIRE}
-\def\END{\vskip 1ex\hrule\vskip 1ex}
-\def\RET{\algKeyword{\ruseng{вернуть}{return}} }
-\def\EXIT{\algKeyword{\ruseng{выход}{exit}}}
-\def\IFTHEN#1{\STATE\algorithmicif\ #1 {\algorithmicthen}}
-\def\PROCEDURE#1{\medskip\STATE\algKeyword{\ruseng{ПРОЦЕДУРА}{PROCEDURE}} \Procedure{#1}}
-
-% Ещё несколько переопределений для алгоритмов
-\renewcommand{\listalgorithmname}{Список алгоритмов}
-\floatname{algorithm}{\ruseng{Алгоритм}{Algorithm}}
-\floatplacement{algorithm}{!t}
-
-% чтобы поставить точечку после номера алгоритма в \caption:
-\renewcommand\floatc@ruled[2]{\vskip2pt\textbf{#1.} #2\par}
-
-% чтобы можно было ссылаться на шаги алгоритма
-\newenvironment{Algorithm}[1][t]%
-    {\begin{algorithm}[#1]\begin{algorithmic}[1]%
-        \renewcommand{\ALC@it}{%
-            \refstepcounter{ALC@line}% удивительно, почему это не сделал Peter Williams?
-            \addtocounter{ALC@rem}{1}%
-            \ifthenelse{\equal{\arabic{ALC@rem}}{1}}{\setcounter{ALC@rem}{0}}{}%
-            \item}}%
-    {\end{algorithmic}\end{algorithm}}
+%\newcommand{\algKeyword}[1]{{\bf #1}}
+%\renewcommand{\algorithmicrequire}{\rule{0pt}{2.5ex}\algKeyword{\ruseng{Вход:}{Require:}}}
+%\renewcommand{\algorithmicensure}{\algKeyword{\ruseng{Выход:}{Ensure:}}}
+%\renewcommand{\algorithmicend}{\algKeyword{\ruseng{конец}{end}}}
+%\renewcommand{\algorithmicif}{\algKeyword{\ruseng{если}{if}}}
+%\renewcommand{\algorithmicthen}{\algKeyword{\ruseng{то}{then}}}
+%\renewcommand{\algorithmicelse}{\algKeyword{\ruseng{иначе}{else}}}
+%\renewcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
+%\renewcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
+%\renewcommand{\algorithmicfor}{\algKeyword{\ruseng{для}{for}}}
+%\renewcommand{\algorithmicforall}{\algKeyword{\ruseng{для всех}{for all}}}
+%\renewcommand{\algorithmicdo}{}
+%\renewcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
+%\renewcommand{\algorithmicwhile}{\algKeyword{\ruseng{пока}{while}}}
+%\renewcommand{\algorithmicendwhile}{\algorithmicend\ \algorithmicwhile}
+%\renewcommand{\algorithmicloop}{\algKeyword{\ruseng{цикл}{loop}}}
+%\renewcommand{\algorithmicendloop}{\algorithmicend\ \algorithmicloop}
+%\renewcommand{\algorithmicrepeat}{\algKeyword{\ruseng{повторять}{repeat}}}
+%\renewcommand{\algorithmicuntil}{\algKeyword{\ruseng{пока}{until}}}
+%%\renewcommand{\algorithmiccomment}[1]{{\footnotesize // #1}}
+%\renewcommand{\algorithmiccomment}[1]{{\quad\sl // #1}}
+%
+%% Мои дополнительные команды для описания алгоритмов
+%\newcommand{\Procedure}[1]{{\tt #1}}
+%\newcommand{\Proc}[1]{\text{\tt #1}}
+%\def\BEGIN{\\[1ex]\hrule\vskip 1ex}
+%\def\PARAMS{\renewcommand{\algorithmicrequire}{\algKeyword{\ruseng{Параметры:}{Parameters:}}}\REQUIRE}
+%\def\END{\vskip 1ex\hrule\vskip 1ex}
+%\def\RET{\algKeyword{\ruseng{вернуть}{return}} }
+%\def\EXIT{\algKeyword{\ruseng{выход}{exit}}}
+%\def\IFTHEN#1{\STATE\algorithmicif\ #1 {\algorithmicthen}}
+%\def\PROCEDURE#1{\medskip\STATE\algKeyword{\ruseng{ПРОЦЕДУРА}{PROCEDURE}} \Procedure{#1}}
+%
+%% Ещё несколько переопределений для алгоритмов
+%\renewcommand{\listalgorithmname}{Список алгоритмов}
+%\floatname{algorithm}{\ruseng{Алгоритм}{Algorithm}}
+%\floatplacement{algorithm}{!t}
+%
+%% чтобы поставить точечку после номера алгоритма в \caption:
+%\renewcommand\floatc@ruled[2]{\vskip2pt\textbf{#1.} #2\par}
+%
+%% чтобы можно было ссылаться на шаги алгоритма
+%\newenvironment{Algorithm}[1][t]%
+%    {\begin{algorithm}[#1]\begin{algorithmic}[1]%
+%        \renewcommand{\ALC@it}{%
+%            \refstepcounter{ALC@line}% удивительно, почему это не сделал Peter Williams?
+%            \addtocounter{ALC@rem}{1}%
+%            \ifthenelse{\equal{\arabic{ALC@rem}}{1}}{\setcounter{ALC@rem}{0}}{}%
+%            \item}}%
+%    {\end{algorithmic}\end{algorithm}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Рисование нейронных сетей и диаграмм
