@@ -1,0 +1,26 @@
+filepath = '../results/experiment_2-2.json'
+
+seeds = 5 * np.arange(2, 5) + 111
+
+params = Params(series_type = "default",
+                from_start = False,
+                a = -40,
+                b = 40,
+                dim = 10,
+                low = -10,
+                high = 10,
+                clip = (-40, 40),
+                workers_num = 3,
+                length = 2000,
+                lower_bound = 100,
+                upper_bound = 400,
+                alternating=True)
+
+different_noises = [1]
+different_windows = [5, 10, 20, 50, 100, 200]
+different_wf = ["const"]
+different_af = ["shift_10", "shift_100", "shift_1000"]
+
+
+# experiments, df = run_experiments(filepath, seeds, params, different_noises, different_windows, different_wf, different_af)
+experiments, df = load_experiments(filepath)

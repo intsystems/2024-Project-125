@@ -5,6 +5,7 @@
 %\usepackage{algcompatible}
 \usepackage{algorithmic}
 \usepackage{booktabs,siunitx}
+\usepackage{bm}
 \graphicspath{{../figures/}}
 
 \raggedbottom
@@ -59,7 +60,7 @@
 
 \title
     [] % short title for page headings, not necessary if a full title fits the headings
-    {Influence of hyperparameters on aggregating predictions of infinite number of experts} % full title
+    {Influence of hyperparameters on online aggregation with countable experts} % full title
 \author
     [S.\,M.~Kunin-Bogoiavlenskii] % short list of the authors (<= 3) for page headings, is necessary only if the full list does not fit the headings
 %S.M. Kunin-Bogoiavlenskii, A.V. Zukhba, and R.D. Zukhba
@@ -75,13 +76,13 @@
     {Moscow Insitute of Physics and Technology}
 \abstract
     {
-    
-    Using aggregation of expert forecasts is one of the important methods to improve prediction accuracy. 
-    This paper focuses on examining the influence of hyperparameters on the accuracy of the aggregation algorithm with an infinite number of experts.
+
+    Aggregating forecasts from multiple experts is a valuable method to improve prediction accuracy.
+    This paper examines the influence of hyperparameters on the accuracy of the aggregation algorithm for a countable number of experts.
     We implement a time series generator with specified properties and an aggregating forecasting model. 
-    We conduct a series of experiments with various hyperparameters of the algorithm.
-    Finding optimal hyperparameters leads to high performance and wider adoption of this prediction method.
-            
+    We conduct a series of experiments with various hyperparameters of the algorithm (including initialization weights, train window). 
+    The experiments confirm that these hyperparameters have a significant influence on the algorithm's performance.           
+        
 %   \noindent
 %   \textbf{Background}:    One paragraph about the problem, existent approaches and its limitations.
 %   
@@ -150,17 +151,17 @@ The master must aggregate the forecasts of all expert strategies constructed up 
 Algorithm GMPP, proposed in \cite{article}, is the foundation of our experiments. 
 
 \section{Problem statement}
-\paragraph{Definitions}
-Let $x_1, x_2, \dots$ be the sequence of signals belonging to the sample space  $\mathsf{X}$. 
-The masters goal is to predict the sequence of the corresponding responces $y_1, y_2, \dots$ belonging to the outcome space $\mathsf{Y}$. 
+%\paragraph{Definitions}
+Let $x_1, x_2, \dots$ be the sequence of signals belonging to the sample space  $\mathcal{X}$. 
+The masters goal is to predict the sequence of the corresponding responces $y_1, y_2, \dots$ belonging to the outcome space $\mathcal{Y}$. 
 We assume that the master knows $a, b \in \RR$ --- the bounds of the responces sequence, s.t. $\forall i\quad a \leq y_i \leq b$.
 
-We assume that there is an infinite number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
-The predictions of the master and experts belong to the decision space $\mathsf{D}$. 
-Let $ \lambda: \mathsf{D} \times \mathsf{Y} \rightarrow \RR_+$ be the nonnegative loss function. 
+We assume that there is an countable number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
+The predictions of the master and experts belong to the decision space $\mathcal{D}$. 
+Let $ \lambda: \mathcal{D} \times \mathcal{Y} \rightarrow \RR_+$ be the nonnegative loss function. 
 
-At each step $t$ every expert $i \in \mathcal{N}$ provides his prediction $f_t^i = f_t^i(x_t)  \in \mathsf{D}$. 
-After obtaining them the master gives his prediction $p_t = p_t(x_t) \in \mathsf{D}$. 
+At each step $t$ every expert $i \in \mathcal{N}$ provides his prediction $f_t^i = f_t^i(x_t)  \in \mathcal{D}$. 
+After obtaining them the master gives his prediction $p_t = p_t(x_t) \in \mathcal{D}$. 
 Next, the generator reveals the true outcome $y_t$, and the losses are computed.
 Let $l_t^i = \lambda(f_t^i, y_t)$ be the loss of expert $i$, and $h_t = \lambda(p_t, y_t)$ be the master's loss 
 
@@ -169,12 +170,17 @@ representing the master's cumulative loss during the first T steps, we can defin
 
 %\paragraph{Data}
  
-\paragraph{Aggregating algorithm}
+%\paragraph{Aggregating algorithm}
 \vspace{5mm}
 
 \begin{breakablealgorithm}
 \caption{GMPP}
 \begin{algorithmic}
+%\STATE Parameters:
+%\STATE \textbullet~ Initialization weights $w^i_1$, s.t. $\sum\limits_{i \in \mathcal{N}}w^i_1 = 1$
+%\STATE \textbullet~ Alpha parameter series $\{\alpha_t\}$
+%\STATE \textbullet~ Train window size 
+
 \STATE Initialize the weights $w^i_1$ so that $\sum\limits_{i \in \mathcal{N}}w^i_1 = 1$
 \FOR{$t = 1, 2, \dots$}
 
@@ -183,7 +189,7 @@ representing the master's cumulative loss during the first T steps, we can defin
 \STATE\textbf{\textperiodcentered}~ Signal $x_t$ is received 
 \STATE\textbf{\textperiodcentered}~ Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
 \STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \bm{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
 \STATE\textbf{\textperiodcentered}~ True outcome $y_t$ is revealed
 \STATE\textbf{\textperiodcentered}~ Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
 \begin{cases}
@@ -241,7 +247,7 @@ We then conduct experiments to analyze the effects of varying hyperparameters.
 \subsection{Data generation}
 
 We define generators $G_1, G_2, \dots, G_k$ by their weight vectors $\vec w_1, \vec w_2, \dots, \vec w_k \in \RR^d$. 
-Here, $d$ represents the dimensionality of the data.
+Here, $d$ represents the dimensionality of the signals.
 
 We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_n \sim \mathcal{N}(0, I_d)$, indicating they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
 
@@ -251,7 +257,7 @@ Each segment $S_i$ is a sequence of vectors itself, containing elements from $\v
 Importantly, each segment $S_i$ is assigned to a specific generator $G_{g(i)}$ according to a random function $g$. 
 This function determines which generator is responsible for creating responses for that segment.
 
-Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_n$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i), \vec x_i} \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, 1)$ 
+Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_n$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i)}, \vec x_i \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, 1)$ 
 
 \subsection{Experts}
 
@@ -261,18 +267,31 @@ Given a new signal vector  $\vec x$, the expert's prediction is obtained by calc
 
 The <<ideal expert>> is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the ideal expert's predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment).
 \newpage
+
+\subsection{Fixed parameters}
+Signals dimention $d=10$
+
+Time series length $T = 2000$.
+
+Responses borders $(a, b) = (-10, 10)$
+
+Number of experts $w = 3$
+
+
+
+
 \subsection{Hyperparameters}
 We run algorithm with various hyperparameters. As a metric of quality we use master's regret relative to the <<ideal expert>>.
 
 \textbf{Initialization weights}
 
-\hspace*{3mm} Default weights: $w_1^t= \frac{1}{(i+1)\ln^2(t+1)}$
+\hspace*{3mm} Default weights: $w_1^t= \frac{1}{(t+1)\ln^2(t+1)}$
 
 \hspace*{3mm} Experimental: $\frac{1}{t^\alpha}$, $\frac{1}{(t+1)\ln(t+1)\ln^2\ln(t+c)}, \frac{1}{e^t}$, etc.
 
-\textbf{Window size}
 
-\hspace*{3mm} As the algorithm does not know the locations of generator switches, finding an optimal training window is also a challenge.
+
+%\hspace*{3mm} As the algorithm does not know the locations of generator switches, finding an optimal training window is also a challenge.
 
 \textbf{Mixing update coefficients}
 
@@ -280,16 +299,58 @@ We run algorithm with various hyperparameters. As a metric of quality we use mas
 
 \hspace*{3mm} Experimental:  $\frac{1}{(t+1)^\beta}, \frac{1}{t+c}$, etc.
 
+\textbf{Window size}
+
+\hspace*{3mm} We vary window size to check algorithm performance in situations when experts lack information or when they often train on pieces made by different generators
+
 \section{Results}
 
 
 
 
 \begin{table}[h]
+%\renewcommand{\arraystretch}{1.5}
+
+\centering
+
+\begin{tabular}{ccr}
+
+\toprule
+Weight function & Regret \\
+\midrule
+$1 / ((t+1)\ln^2(t+1))$   & 136360.61 \\
+$1 / t^{1.01}$  &\ 94758.81 \\
+ $1 / t^{1.1}$&\ 98359.26 \\
+$1 / t^{2}$ & 113298.39 \\
+%$1/ e^{x/4}$ & 425358.37 \\
+$1 / ((x + 4) * \ln(x + 4) * \ln^2\ln(x + 4)) $  & 127634.11 \\
+\bottomrule
+\end{tabular}
+
+
+%\begin{tabular}{clr}
+%
+%\toprule
+%Weight function & Alpha function & Regret \\
+%\midrule
+%$\dfrac{1}{(t+1)\ln^2(t+1)}$  & $1 / (x + 1)$ & 136360.61 \\
+%$1 / t^{1.01}$ & $1 / (x + 1)$ & 94758.81 \\
+% $1 / t^{1.1}$& $1 / (x + 1)$ & 98359.26 \\
+%$1 / t^{2}$ & $1 / (x + 1)$ & 113298.39 \\
+%$1/ e^{x/4}$ & $1 / (x + 1)$ & 425358.37 \\
+%$\dfrac1{((x + 4) * \ln(x + 4) * (\ln(\ln(x + 4)))^2}$  & $1 / (x + 1)$ & 127634.11 \\
+%\bottomrule
+%\end{tabular}
+
+\caption{Dinamics of regret value over different sizes of train window} \hspace{16cm}
+\end{table}
+
+
+\begin{table}[h]
+
 \centering
 
 \begin{tabular}{r|ccc}
-
  &
 \multicolumn{2}{c}{Weight function} \\
 
@@ -310,14 +371,31 @@ We run algorithm with various hyperparameters. As a metric of quality we use mas
 200 & 164746.91 & 113835.86 \\ %& 137111.18 \\
 \bottomrule
 \end{tabular}
-\caption{Regret for different weight functions} \hspace{16cm}
+\caption{Regret value for different weight functions} \hspace{16cm}
 \end{table}
 
 
+\begin{table}[h]
 
+\centering
 
+\begin{tabular}{cc}
+\toprule
+Alpha function & regret \\
+\midrule
+$1 / (x + 1)$ &\ 94758.81 \\
+$1 / (x + 1)^{0.5}$ & 149472.52 \\
+$1 / (x + 1)^{1.5}$ &\ 92351.58 \\
+$1 / (x + 1)^2)$ &\ 99120.36 \\
+$1 / e^{x/3}$ &\ 99477.13 \\
+$1 / (x + 10)$ &\ 94729.22 \\
+$1 / (x + 100)$ &\ 94441.30 \\
+$1 / (x + 1000)$ &\ 92194.36 \\
+\bottomrule
+\end{tabular}
 
-
+\caption{Regret value for different alpha functions} \hspace{16cm}
+\end{table}
 
 
 \includegraphics[width=1\linewidth]{improvement3}

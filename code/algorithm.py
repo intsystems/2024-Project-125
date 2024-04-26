@@ -327,3 +327,134 @@ class Algorithm(object):
         self.count_theoretical_upper()
         self.zero_losses = self.loss_func(self.responses, 0)
         self.regret = self.master_losses_all[self.shift:].sum() - self.ideal_losses[self.shift:].sum()
+
+    def draw_all(self, show=None, show_experts=None,
+                 show_axes=None, height_ratios=None, suptitle=None, fig_size=(15, 10)):
+        """
+        Visualizes the performance of the AA algorithm,
+            including predictions, losses, regrets, and theoretical bounds.
+
+        Args:
+            show (list, optional): A list of elements to display on the plots (e.g., "master", "zero", "ideal").
+                Defaults to ["master"].
+            show_experts (list, optional): A list of expert indices to display on the plots. Defaults to [].
+            show_axes (list, optional): A list of axes to display on the plots (e.g., "value", "loss", "regret").
+                Defaults to ["regret"].
+            height_ratios (list, optional): A list of height ratios for the subplots.
+                Defaults to [1 for _ in show_axes].
+            suptitle (string, optional): Title for the plot
+            fig_size (tuple, optional): Figure size. Defaults to (15,10).
+
+        Returns:
+            tuple: A tuple containing the figure and axes objects.
+        """
+
+        if show is None:
+            show = ["master"]
+        if show_experts is None:
+            show_experts = []
+        if show_axes is None:
+            show_axes = ["regret"]
+        if height_ratios is None:
+            height_ratios = [1 for _ in show_axes]
+        if suptitle is None:
+            suptitle = "Algorithm"
+        assert len(show_axes) == len(height_ratios), "Wrong sizes"
+
+        text_idx = 0
+
+        fig, axes = plt.subplots(len(show_axes), 1, figsize=fig_size, sharex=True, height_ratios=height_ratios)
+        ax = [axes] if len(show_axes) == 1 else axes
+        grid = np.arange(self.total_time - self.shift)
+
+        try:
+            idx = show_axes.index("value")
+
+            ax[idx].plot(grid, self.responses[self.shift:], label="Real responses",
+                         color='black')
+
+            if "zero" in show:
+                ax[idx].plot(grid, np.full(self.total_time - self.shift, 0),
+                             label="Zero expert predictions",
+                             color='yellow')
+            for expert_num in show_experts:
+                ax[idx].plot(grid, self.experts_predictions_all.T[expert_num][self.shift:],
+                             label=f"Expert {expert_num} predictions")
+            if "master" in show:
+                ax[idx].plot(grid, self.master_predictions_all[self.shift:],
+                             label="Master predictions",
+                             color='red')
+            ax[idx].set_xlabel("Time")
+            ax[idx].set_ylabel("Value")
+            ax[idx].xaxis.set_ticks_position('top')
+            ax[idx].legend()
+
+        except ValueError:
+            pass
+
+        try:
+            idx = show_axes.index("loss")
+            text_idx = idx
+
+            if "ideal" in show:
+                ax[idx].plot(grid, self.ideal_losses[self.shift:], label="Ideal expert losses",
+                             color='green')
+            if "zero" in show:
+                ax[idx].plot(grid, self.zero_losses[self.shift:],
+                             label="Zero expert losses",
+                             color='yellow')
+            for expert_num in show_experts:
+                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:],
+                             label=f"Expert {expert_num} losses")
+            if "master" in show:
+                ax[idx].plot(grid, self.master_losses_all[self.shift:], label="Master losses",
+                             color='red')
+
+            ax[idx].set_ylabel("Loss")
+            ax[idx].legend()
+
+        except ValueError:
+            pass
+
+        try:
+            idx = show_axes.index("regret")
+
+            if "ideal" in show:
+                ax[idx].plot(grid, self.ideal_losses[self.shift:].cumsum(),
+                             label="Ideal expert cumulative losses", color='green')
+            if "zero" in show:
+                ax[idx].plot(grid, self.zero_losses[self.shift:].cumsum(),
+                             label="Zero expert cumulative losses", color='yellow')
+
+            for expert_num in show_experts:
+                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:].cumsum(),
+                             label=f"Expert {expert_num} cumulative losses")
+
+            if "master" in show:
+                ax[idx].plot(grid, self.master_losses_all[self.shift:].cumsum(),
+                             label="Master cumulative losses", color='red')
+
+            if "theoretical" in show:
+                ax[idx].plot(grid, self.theoretical_upper[self.shift:],
+                             label="Theoretical upper bound", color='black')
+
+            ax[idx].set_xlabel("Time")
+            ax[idx].set_ylabel("Regret")
+            ax[idx].legend()
+
+        except ValueError:
+            pass
+
+        bottom, top = ax[text_idx].get_ybound()
+        left, right = ax[text_idx].get_xbound()
+        for gen_idx, gen_stamp in zip(np.r_[self.indexes, -1], self.stamps):
+            if gen_stamp < self.shift:
+                continue
+            for i in range(len(show_axes)):
+                ax[i].axvline(gen_stamp - self.shift, color='orange', linestyle=':')
+            if gen_idx != -1:
+                ax[text_idx].text(x=gen_stamp - self.shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
+                                  s=f"gen {gen_idx}", color='orange', rotation=15)
+
+        fig.suptitle(suptitle, fontsize=15)
+        plt.show()

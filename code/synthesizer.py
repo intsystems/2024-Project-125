@@ -24,7 +24,6 @@ def generate_default_time_series(weights, clip, n, noise_var, rs):
     final_responses = np.empty(0)
     while final_responses.size < n:
         signals = np.random.normal(0, 1, size=(n, dim))
-        # noise_var = 1
         noise = np.random.normal(0, noise_var, n)
         responses = signals @ weights + noise
         if clip is not None:
@@ -113,8 +112,8 @@ class Synthesizer(object):
     """
     This class is responsible for generating synthetic time series data with different characteristics.
     """
-    def __init__(self, series_type, dim, low, high, clip=None,
-                 noise_var=1, workers_num=2, random_seed=18):
+    def __init__(self, series_type, dim, low, high, clip,
+                 noise_var, workers_num, random_seed):
         """
         Synthesizer constructor
 
