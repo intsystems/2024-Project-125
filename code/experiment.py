@@ -140,8 +140,7 @@ def run_experiments(filepath, seeds, params, different_noises, different_windows
                     hyper_w = weight_hypers[key_w]
                     hyper_a = alpha_hypers[key_a]
                     algo = Algorithm(params.series_type, gen, train_window=train_window, a=params.a, b=params.b,
-                                     weights_func=hyper_w.func, weight_const=hyper_w.const, alpha_func=hyper_a.func,
-                                     init_pretrained=False)
+                                     weights_func=hyper_w.func, weight_const=hyper_w.const, alpha_func=hyper_a.func)
                     gen.launch()
                     algo.run()
                     algo.post_calculations(from_start=params.from_start)

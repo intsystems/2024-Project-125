@@ -1,9 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from statsmodels.tsa.arima.model import ARIMA
-import copy
+from expert import Expert, ArimaExpert
 
 DEFAULT_CONST = 2.10974
 
@@ -24,8 +22,7 @@ class Algorithm(object):
 
     def __init__(self, series_type, generator, train_window,
                  total_time=None, a=None, b=None,
-                 weights_func=None, weight_const=None, alpha_func=None,
-                 init_pretrained=False):
+                 weights_func=None, weight_const=None, alpha_func=None):
         """
         Algorithm constructor
 
@@ -43,8 +40,6 @@ class Algorithm(object):
                 Defaults to a specific decreasing function.
             alpha_func (callable, optional): A function that defines mixing update coefficients.
                 Defaults to  lambda t: 1 / (t + 1)
-            init_pretrained (bool, optional): Whether to initialize experts with pretrained models.
-                Defaults to False.
         """
 
         self.series_type = series_type
@@ -67,7 +62,6 @@ class Algorithm(object):
         self.responses = np.zeros(self.total_time)
         self.curr_time = 0
         self.experts = []
-        self.init_pretrained = init_pretrained
 
         self.weights1 = self.weights_func(np.arange(1, self.total_time))
         self.weights = np.r_[0, self.weights1]
@@ -93,7 +87,6 @@ class Algorithm(object):
 
         self.theoretical_upper = np.zeros(self.total_time)
         self.weights_all = np.zeros((self.total_time, self.total_time))
-        self.models_idxs = []
 
         self.shift = 0
         self.indexes = self.generator.indexes
@@ -139,17 +132,9 @@ class Algorithm(object):
             self.curr_time += 1
 
             self.experts.append("Zero expert is fiction")
-            self.models_idxs.append(-1)
             return
 
-        # if self.curr_time < 3 * self.generator.synthesizer.workers_num:
-        #     self.initialize_pretrained()
-        # else:
-        #     self.initialize_expert()
-        if self.init_pretrained:
-            self.initialize_pretrained()
-        else:
-            self.initialize_expert()
+        self.initialize_expert()
 
         self.receive_signal()
         self.normalized_weights = self.weights[1:self.curr_time + 1] / self.weights[1:self.curr_time + 1].sum()
@@ -157,6 +142,11 @@ class Algorithm(object):
 
         self.receive_response()
         self.compute_losses()
+        if self.series_type == "arima":
+            for i, expert in enumerate(self.experts):
+                if i == 0:
+                    continue
+                expert.update(response=self.responses[self.curr_time])
 
         self.loss_update()
         self.mixing_update()
@@ -169,31 +159,19 @@ class Algorithm(object):
         Initializes a new expert using linear regression on the most recent training window of data.
         """
         past = max(self.curr_time - self.train_window, 0)
-        self.experts.append(
-            LinearRegression().fit(self.signals[past:self.curr_time], self.responses[past:self.curr_time]))
 
-    def initialize_pretrained(self):
-        """
-        Initializes a new expert using a pre-trained model from the generator, depending on the series type.
-        """
-        if self.series_type == "default":
-            # if (9 * self.generator.synthesizer.workers_num <
-            #         self.curr_time < 15 * self.generator.synthesizer.workers_num):
-            #     idx = self.curr_time % self.generator.synthesizer.workers_num
-            # else:
-            #     idx = 0
-            idx = np.random.randint(0, self.generator.synthesizer.workers_num)
-            model = LinearRegression()
-            model.coef_ = self.generator.params_list[idx]
-            model.intercept_ = 0.
-            self.experts.append(model)
-            self.models_idxs.append(idx)
 
         if self.series_type == "arima":
-            idx = np.random.randint(0, self.generator.synthesizer.workers_num)
-            self.models_idxs.append(idx)
-            ar, ma = self.generator.params_list[idx]
-            self.experts.append((ar, ma))
+            idx = self.curr_time % self.generator.synthesizer.workers_num
+            ar, ma = self.generator.synthesizer.arma_params[idx]
+            # possible = self.generator.synthesizer.arma_params
+            possible = [(ar, ma)]
+            expert = ArimaExpert(possible=possible)
+        else:
+            expert = Expert()
+
+        expert.fit(self.signals[past:self.curr_time], self.responses[past:self.curr_time])
+        self.experts.append(expert)
 
     def predict(self):
         """
@@ -203,23 +181,7 @@ class Algorithm(object):
         for i, expert in enumerate(self.experts):
             if i == 0:
                 continue
-            if self.series_type == "default":
-                self.experts_predictions[i] = expert.predict(signal.reshape(1, -1))
-            if self.series_type == "arima":
-                # past = max(self.curr_time - self.train_window, 0)
-                # model = copy.copy(expert)
-                # model.extend(self.responses[past:self.curr_time])
-                # self.experts_predictions[i] = model.forecast()
-                ar, ma = expert
-                ar_part = self.responses[self.curr_time - 1] * ar[1] if self.curr_time > 0 else 0
-                if self.curr_time < 1:
-                    ma_part = 0
-                else:
-                    eps1 = (self.responses[self.curr_time - 1]
-                            - self.experts_predictions_all[self.curr_time - 1, i])
-                    ma_part = eps1 * ma[1]
-
-                self.experts_predictions[i] = ar_part + ma_part
+            self.experts_predictions[i] = expert.predict(signal.reshape(1, -1))
 
         self.master_prediction = self.subst() if self.experts else 0.
 
