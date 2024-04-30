@@ -114,15 +114,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def run_experiments(filepath, seeds, params, different_noises, different_windows, different_wf, different_af):
-    interesting = set()
-
-    for key_w in different_wf:
-        interesting.add((key_w, "default"))
-
-    for key_a in different_af:
-        interesting.add(("simple_101", key_a))
-
+def run_experiments(filepath, seeds, params, different_noises, different_windows, interesting, share_type="start"):
     experiments = []
 
     for rs in seeds:
@@ -140,7 +132,8 @@ def run_experiments(filepath, seeds, params, different_noises, different_windows
                     hyper_w = weight_hypers[key_w]
                     hyper_a = alpha_hypers[key_a]
                     algo = Algorithm(params.series_type, gen, train_window=train_window, a=params.a, b=params.b,
-                                     weights_func=hyper_w.func, weight_const=hyper_w.const, alpha_func=hyper_a.func)
+                                     weights_func=hyper_w.func, weight_const=hyper_w.const, alpha_func=hyper_a.func,
+                                     share_type=share_type)
                     gen.launch()
                     algo.run()
                     algo.post_calculations(from_start=params.from_start)
@@ -234,15 +227,15 @@ def draw_regrets(logs, show=None, title=None, fig_size=(15, 10)):
 
     if "ideal" in show:
         plt.plot(grid, logs.ideal_losses[logs.shift:].cumsum(),
-                     label="Ideal expert cumulative losses", color='green')
+                 label="Ideal expert cumulative losses", color='green')
 
     if "master" in show:
         plt.plot(grid, logs.master_losses_all[logs.shift:].cumsum(),
-                     label="Master cumulative losses", color='red')
+                 label="Master cumulative losses", color='red')
 
     if "theoretical" in show:
         plt.plot(grid, logs.theoretical_upper[logs.shift:],
-                     label="Theoretical upper bound", color='black')
+                 label="Theoretical upper bound", color='black')
 
     plt.xlabel("Time")
     plt.ylabel("Regret")
@@ -258,7 +251,7 @@ def draw_regrets(logs, show=None, title=None, fig_size=(15, 10)):
         plt.axvline(gen_stamp - logs.shift, color='orange', linestyle=':')
         if gen_idx != -1:
             ax.text(x=gen_stamp - logs.shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
-                              s=f"gen {gen_idx}", color='orange', rotation=15)
+                    s=f"gen {gen_idx}", color='orange', rotation=15)
 
     plt.title(title, fontsize=15)
     plt.show()

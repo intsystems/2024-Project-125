@@ -12,7 +12,7 @@ def generate_linear_time_series(weights, n):
     return signals, responses
 
 
-def generate_arma(ar_params, ma_params, sigma, n):
+def generate_arima(ar_params, ma_params, sigma, n):
     p = len(ar_params)
     q = len(ma_params)
 
@@ -106,7 +106,7 @@ class Synthesizer(object):
         self.dim = dim
         self.workers_num = workers_num
         self.params_list = None
-        self.arma_params = None
+        self.arima_params = None
 
     def generate_indexes_and_sizes(self, length, from_start, lower_bound, upper_bound, alternating):
         """
@@ -162,8 +162,8 @@ class Synthesizer(object):
 
         self.params_list = [self.generate_default_weights(self.rs + i) for i in range(self.workers_num)]
         if self.series_type == "arima":
-            self.arma_params = [generate_arima_params(self.rs + i) for i in range(self.workers_num)]
-        ts_list = [self.generate_time_series(idx, pieces_sizes[i]) for i, idx in enumerate(pieces_indexes)]
+            self.arima_params = [generate_arima_params(self.rs + i) for i in range(self.workers_num)]
+        ts_list = [self.generate_time_series(idx, pieces_sizes[i], self.rs + i) for i, idx in enumerate(pieces_indexes)]
         return total_time, self.params_list, pieces_indexes, ts_list
 
     def generate_default_weights(self, rs):
@@ -179,35 +179,34 @@ class Synthesizer(object):
         np.random.seed(rs)
         return np.random.randint(low=self.low, high=self.high, size=self.dim)
 
-    def generate_time_series(self, idx, n):
+    def generate_time_series(self, idx, n, rs):
         """
         Generates a synthetic time series using a linear model with Gaussian noise.
 
         Args:
-            weights (np.array): The weight vector for the linear model.
-            clip (tuple, optional): A tuple (min, max) specifying the range to clip the responses. Defaults to None.
             n (int): The length of the time series.
             rs (int): The random seed for reproducibility.
 
         Returns:
             tuple: A tuple containing the generated signals (np.array) and responses (np.array).
         """
-
+        np.random.seed(rs)
         final_signals = np.empty((0, self.dim))
         final_responses = np.empty(0)
         weights = self.params_list[idx]
         while final_responses.size < n:
             signals, responses = generate_linear_time_series(weights, n)
             if self.series_type == 'arima':
-                ar_params, ma_params =  self.arma_params[idx]
+                ar_params, ma_params = self.arima_params[idx]
                 sigma = self.noise_var
-                arma_series, err = generate_arma(ar_params, ma_params, sigma, n)
-                noise = arma_series
+                arima_series, err = generate_arima(ar_params, ma_params, sigma, n)
+                noise = arima_series
             else:
                 noise = np.random.normal(0, self.noise_var, n)
             responses += noise
             if self.clip is not None:
                 final_signals = np.r_[final_signals, signals[(self.clip[0] < responses) & (responses < self.clip[1])]]
-                final_responses = np.r_[final_responses, responses[(self.clip[0] < responses) & (responses < self.clip[1])]]
+                final_responses = np.r_[
+                    final_responses, responses[(self.clip[0] < responses) & (responses < self.clip[1])]]
 
         return final_signals[:n], final_responses[:n]

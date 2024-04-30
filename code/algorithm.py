@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from expert import Expert, ArimaExpert
+from experts import Expert, ArimaExpert
 
 DEFAULT_CONST = 2.10974
 
@@ -22,7 +22,7 @@ class Algorithm(object):
 
     def __init__(self, series_type, generator, train_window,
                  total_time=None, a=None, b=None,
-                 weights_func=None, weight_const=None, alpha_func=None):
+                 weights_func=None, weight_const=None, alpha_func=None, share_type="start"):
         """
         Algorithm constructor
 
@@ -56,6 +56,7 @@ class Algorithm(object):
             if weights_func is not None else default_weights_func
         self.alpha_func = alpha_func \
             if alpha_func is not None else default_alpha_func
+        self.share_type = share_type
         self.loss_func = lambda x, y: np.square(x - y)
 
         self.signals = np.zeros((self.total_time, self.generator.synthesizer.dim))
@@ -158,15 +159,14 @@ class Algorithm(object):
         """
         Initializes a new expert using linear regression on the most recent training window of data.
         """
-        past = max(self.curr_time - self.train_window, 0)
-
+        past = int(max(self.curr_time - self.train_window, 0))
 
         if self.series_type == "arima":
-            idx = self.curr_time % self.generator.synthesizer.workers_num
-            ar, ma = self.generator.synthesizer.arma_params[idx]
-            # possible = self.generator.synthesizer.arma_params
-            possible = [(ar, ma)]
-            expert = ArimaExpert(possible=possible)
+            # idx = self.curr_time % self.generator.synthesizer.workers_num
+            # ar, ma = self.generator.synthesizer.arima_params[idx]
+            # possible = self.generator.synthesizer.arima_params
+            # possible = [(ar, ma)]
+            expert = ArimaExpert()
         else:
             expert = Expert()
 
@@ -203,6 +203,7 @@ class Algorithm(object):
         self.experts_losses[1:self.curr_time + 1] = \
             self.loss_func(self.experts_predictions[1:self.curr_time + 1], true_response)
         self.master_loss = self.loss_func(self.master_prediction, true_response)
+        # self.experts_losses[:10] = 1e6
         self.experts_losses[self.curr_time + 1:] = self.master_loss
 
     def loss_update(self):
@@ -224,8 +225,25 @@ class Algorithm(object):
         which combines the initial weights with the loss-updated weights.
         """
         alpha = self.alpha_func(self.curr_time)
-        self.weights[1:self.total_time] = (alpha * self.weights1
-                                           + (1 - alpha) * self.weights[1:self.total_time])
+        if self.share_type == "start":
+            self.weights[1:self.total_time] = (alpha * self.weights1
+                                               + (1 - alpha) * self.weights[1:self.total_time])
+        if self.share_type == "uniform past":
+            uniform_component = self.weights_all[:self.curr_time, 1:self.total_time].mean(axis=0)
+            self.weights[1:self.total_time] = (alpha * uniform_component
+                                               + (1 - alpha) * self.weights[1:self.total_time])
+        if self.share_type == "decaying past":
+            gamma = 1
+            mixing = (self.curr_time - np.arange(self.curr_time)) ** gamma
+            mixing_weights = mixing / mixing.sum()
+            decaying_component = (mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=1)
+            # print((mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=0))
+            # if decaying_component >= 1:
+
+            self.weights[1:self.total_time] = (alpha * decaying_component
+                                               + (1 - alpha) * self.weights[1:self.total_time])
+
+        # assert (1 - self.weights[1:self.total_time].sum() > 0)
 
     def receive_signal(self):
         """
@@ -284,7 +302,7 @@ class Algorithm(object):
         """
         if not from_start:
             self.shift = self.generator.stamps[self.generator.synthesizer.workers_num]
-        
+
         self.count_segment_losses()
         self.count_theoretical_upper()
         self.zero_losses = self.loss_func(self.responses, 0)

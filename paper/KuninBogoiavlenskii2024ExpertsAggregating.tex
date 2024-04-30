@@ -189,7 +189,7 @@ representing the master's cumulative loss during the first T steps, we can defin
 \STATE\textbf{\textperiodcentered}~ Signal $x_t$ is received 
 \STATE\textbf{\textperiodcentered}~ Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
 \STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \bm{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} p_i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \mathit{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
 \STATE\textbf{\textperiodcentered}~ True outcome $y_t$ is revealed
 \STATE\textbf{\textperiodcentered}~ Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
 \begin{cases}
@@ -197,9 +197,9 @@ representing the master's cumulative loss during the first T steps, we can defin
         h_t, & \text{if $i > t$}
 \end{cases}$
 \STATE\textbf{\textperiodcentered}~ \textbf{Loss Update} weights modification
-\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
+\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{-\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
 \STATE\textbf{\textperiodcentered}~ \textbf{Mixing Update} weights modification
-\[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t\widetilde{w}_t^i)\] 
+\[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t)\widetilde{w}_t^i\] 
 
 \ENDFOR
 

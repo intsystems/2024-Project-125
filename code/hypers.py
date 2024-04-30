@@ -1,7 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
 
-
 DEFAULT_CONST = 2.10974  # paper
 
 
@@ -164,6 +163,21 @@ weight_hypers = {
 
 # ------------------------------------------------
 
+def alpha_func_const_13(x):
+    return 1 / 3
+
+
+def alpha_func_const_23(x):
+    return 2 / 3
+
+
+def alpha_func_const_89(x):
+    return 8 / 9
+
+
+def alpha_func_const_1100(x):
+    return 1 / 100
+
 
 def default_alpha_func(x):
     return 1 / (x + 1)
@@ -222,7 +236,7 @@ def alpha_exp_func(x):
 
 
 def alpha_exp_3_func(x):
-    return np.exp(-x/3)
+    return np.exp(-x / 3)
 
 
 @dataclass
@@ -232,6 +246,10 @@ class AlphaHyper:
 
 
 alpha_hypers = {
+    "const_13": AlphaHyper(alpha_func_const_13, "1 / 3"),
+    "const_23": AlphaHyper(alpha_func_const_23, "2 / 3"),
+    "const_89": AlphaHyper(alpha_func_const_89, "8 / 9"),
+    "const_1100": AlphaHyper(alpha_func_const_1100, "1 / 100"),
     "default": AlphaHyper(default_alpha_func, "1 / (x + 1)"),
     "simple_01": AlphaHyper(alpha_func_01, "1 / (x + 1)^0.1"),
     "simple_05": AlphaHyper(alpha_func_05, "1 / (x + 1)^0.5"),
