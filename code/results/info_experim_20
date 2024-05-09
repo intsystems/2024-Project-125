@@ -12,9 +12,9 @@ params = Params(series_type = "default",
                 high = 10,
                 clip = (-40, 40),
                 workers_num = 5,
-                length = 20,
-                lower_bound = 1,
-                upper_bound = 3,
+                length = 2000,
+                lower_bound = 50,
+                upper_bound = 300,
                 alternating=True)
 
 different_noises = [1]

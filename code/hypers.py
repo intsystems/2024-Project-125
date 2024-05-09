@@ -2,42 +2,42 @@ import numpy as np
 from dataclasses import dataclass
 
 
-DEFAULT_CONST = 2.10974  # paper
+DEFAULT_CONST = 2.10974
 
 
 def default_weights_func(x):
     return 1 / ((x + 1) * np.square(np.log(x + 1))) / DEFAULT_CONST
 
 
-CONST_1001 = 1000.58  # wolfram alpha
+CONST_1001 = 1000.58
 
 
 def weights_func_1001(x):
     return 1 / (x ** 1.001) / CONST_1001
 
 
-CONST_101 = 100.578  # wolfram alpha
+CONST_101 = 100.578
 
 
 def weights_func_101(x):
     return 1 / (x ** 1.01) / CONST_101
 
 
-CONST_105 = 20.5808  # wolfram alpha
+CONST_105 = 20.5808
 
 
 def weights_func_105(x):
     return 1 / (x ** 1.05) / CONST_105
 
 
-CONST_11 = 10.5844  # wolfram alpha
+CONST_11 = 10.5844
 
 
 def weights_func_11(x):
     return 1 / (x ** 1.1) / CONST_11
 
 
-CONST_12 = 5.59158  # wolfram alpha
+CONST_12 = 5.59158
 
 
 def weights_func_12(x):
@@ -51,7 +51,7 @@ def weights_func_2(x):
     return 1 / (x ** 2) / CONST_2
 
 
-CONST_3 = 1.2021  # wolfram alpha
+CONST_3 = 1.2021
 
 
 def weights_func_3(x):
@@ -66,7 +66,7 @@ def weights_exp4_func(x):
     return np.exp(-x / 4) / CONST_EXP_4
 
 
-CONST_SLOW = 2.3533  # approx sum
+CONST_SLOW = 2.3533
 
 
 def weights_func_slow(x):

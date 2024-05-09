@@ -6,6 +6,7 @@
 \usepackage{algorithmic}
 \usepackage{booktabs,siunitx}
 \usepackage{bm}
+\usepackage[outline]{contour}
 \graphicspath{{../figures/}}
 
 \raggedbottom
@@ -80,7 +81,7 @@
     Aggregating forecasts from multiple experts is a valuable method to improve prediction accuracy.
     This paper examines the influence of hyperparameters on the accuracy of the aggregation algorithm for a countable number of experts.
     We implement a time series generator with specified properties and an aggregating forecasting model. 
-    We conduct a series of experiments with various hyperparameters of the algorithm (including initialization weights, train window). 
+    We conduct a series of experiments with various hyperparameters of the algorithm (including initialization weights, mixing scheme, train window). 
     The experiments confirm that these hyperparameters have a significant influence on the algorithm's performance.           
         
 %   \noindent
@@ -163,12 +164,13 @@ Let $ \lambda: \mathcal{D} \times \mathcal{Y} \rightarrow \RR_+$ be the nonnegat
 At each step $t$ every expert $i \in \mathcal{N}$ provides his prediction $f_t^i = f_t^i(x_t)  \in \mathcal{D}$. 
 After obtaining them the master gives his prediction $p_t = p_t(x_t) \in \mathcal{D}$. 
 Next, the generator reveals the true outcome $y_t$, and the losses are computed.
-Let $l_t^i = \lambda(f_t^i, y_t)$ be the loss of expert $i$, and $h_t = \lambda(p_t, y_t)$ be the master's loss 
+Let $h_t = \lambda(p_t, y_t)$ be the master's loss , and $l_t^i = \lambda(f_t^i, y_t)$ be the loss of expert $i \le t$. For $i > t$ (i.e. expert $i$ is not yet initialized), $l_t^i = h_t$.
 
 With designations $L_T^i = \sum_{t = 1}^T l_t^i$, representing the cumulative loss of expert $i$ during the first T steps, and $H_T = \sum_{t = 1}^T h_t$, 
-representing the master's cumulative loss during the first T steps, we can define the master's regret relative to the expert $i$ as $R^i_t = H_T - L^i_T$. 
+representing the master's cumulative loss during the first T steps, we can define the master's regret relative to the expert $i$ as $R^i_T = H_T - L^i_T$. 
 
-%\paragraph{Data}
+The best partition is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the best partition predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment). Master's regret relative to the best partition is defined as $R_T= H_T - L_T$, where $L_T$ is the cumulative loss of the best partition. We use this $R_T$ as a metric in our experiments.
+
  
 %\paragraph{Aggregating algorithm}
 \vspace{5mm}
@@ -188,7 +190,7 @@ representing the master's cumulative loss during the first T steps, we can defin
 \STATE\textbf{\textperiodcentered}~ Expert $f^t$ initialization
 \STATE\textbf{\textperiodcentered}~ Signal $x_t$ is received 
 \STATE\textbf{\textperiodcentered}~ Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
-\STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
+\STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$
 \STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \textit{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}}  \hat w_t^i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
 \STATE\textbf{\textperiodcentered}~ True outcome $y_t$ is revealed
 \STATE\textbf{\textperiodcentered}~ Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
@@ -207,40 +209,6 @@ representing the master's cumulative loss during the first T steps, we can defin
 \end{algorithmic}
 \end{breakablealgorithm} 
 
-
-%\textbf{Initialization}: Initialize the weights $w^i_1$ so that $\sum_{i \in \mathcal{N}}w^i_1 = 1$
-%
-%\textbf{FOR} $t = 1, 2, \dots$:
-%\begin{enumerate}[leftmargin=4em]
-%\item Expert $f^t$ initialization
-%\item Signal $x_t$ received from the generator 
-%\item Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
-%\item Compute normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-%\item Master's prediction evaluation $\gamma_t = \mathsf{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t})$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
-%\item Generator reveals true outcome $y_t$
-%\item Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
-%\begin{cases}
-%        \lambda(f_t^i, y_t), & \text{if $i \le t$} \\
-%        h_t, & \text{if $i > t$}
-%\end{cases}$
-%%\item Modify experts' weights in two steps:
-%
-%\item \textbf{Loss Update} weights modification
-%\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
-%\item \textbf{Mixing Update} weights modification
-%\[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t\widetilde{w}_t^i)\] 
-%\end{enumerate}
-%
-%\textbf{ENDFOR}
-
-%\bigskip
-%It was proved in \cite{article} that for $\alpha = \frac1{t + 1}$ and any partition of $k+1$ experts, the following is true  (where $L_T(E)$ is the cumulative loss of partition $E$) :
-%\[ \limsup_{T \to \infty} \dfrac{H_T - L_T(E)}{T} = 0.\] 
-%
-%This allows formulating the main assumption underlying the application of the GMPP algorithm: 
-%In cases where it is possible to <<attach>> a valid predictive (expert) strategy to each local sub-sample from the generation area, carrying small losses on each local sub-sample generated by the generator, i.e., <<learn>> this generator, the GMPP algorithm will also predict with sufficiently small losses on the entire sample.
-
-
 \section{Experiment}
 We implement the synthetic time series generator and the GMPP algorithm itself. 
 We then conduct experiments to analyze the effects of varying hyperparameters.
@@ -253,7 +221,7 @@ We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_T 
 
 This series of vectors is then randomly divided into a sequence of segments. 
 We denote these segments as $S_1, S_2, \dots, S_m$. 
-Each segment $S_i$ is a sequence of vectors itself, containing elements from $\vec x_1$ to $\vec x_{s_i}$ (where $s_i$ is the index of the last element in segment $i$ ). 
+Each segment $S_i$ is a sequence of vectors itself, containing elements from $\vec x_{s_{i-1}+1}$ to $\vec x_{s_i}$ (where $s_i$ is the index of the last element in segment $i$, $s_0 = 0$). 
 Importantly, each segment $S_i$ is assigned to a specific generator $G_{g(i)}$ according to a random function $g$. 
 This function determines which generator is responsible for creating responses for that segment.
 
@@ -264,13 +232,18 @@ Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_T$ by taking t
 In our experiment, we fix the following data characteristics:
 \begin{itemize}
 \item Time series length $T = 2000$
+\item For adequate algorithm behaviour in the beggining of the algorithm, 
+we add few segments (one from each generator) in front of the main time series. This part is not taken into account in regret calculation
 \item Signals dimention $d=10$
-\item Generator weight vectors are drawn from uniform distribution $U_{[-10, 10]^d}$
+\item Generator weight vectors are drawn from a uniform distribution $U_{[-10, 10]^d}$
 \item Responses bounds $(a, b) = (-40, 40)$
-\item Segments sizes are drawn form uniform distribution $U_{[100, 400]}$
-\item Number of generators $k = 3$
+\item Segments sizes are drawn from a uniform distribution $U_{[50, 300]}$
+\item Number of generators $k = 5$
+\item Function g randomly alternates generators for adjacent segments
 \item White noise variance $\sigma^2= 1$
 \end{itemize}
+
+Also, to ensure robust performance from the outset, we insert a short priming sequence at the beginning of the time series. This sequence includes one segment from each generator. Importantly, the data from this priming sequence is excluded from the regret calculation.
 \subsection{Experts}
 
 Each expert $f_t$ is initialized as a linear regression model. 
@@ -280,43 +253,93 @@ $\theta_t = (\vec X^T\vec X)^{-1}\vec X^T\vec y$,\ where $\vec X^T = (\vec x_{t-
 
 Given a new signal vector  $\vec x$, the expert's prediction is obtained by calculating the dot product between the weight vector and the signal vector: $f_t(\vec x) = \langle \vec \theta_t, \vec x \rangle$ 
 
-The <<best partition >> is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the best partition predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment).
-\newpage
+
+%\newpage
+
 
 \subsection{Hyperparameters}
 
+We investigate the impact of various hyperparameters on the GMPP algorithm's performance, focusing on initialization weights, mixing scheme, mixing update coefficients, and expert window size. 
+\begin{enumerate}
+\item Initialization Weights ($w_1^t$):
+\begin{itemize}
+\item Default: $w_1^t = \frac{1}{(t+1)\ln^2(t+1)}$
+\item Experimental: 
+\begin{itemize}
+\item $w_1^t = \frac{1}{e^t}$, exploring exponential decay as a common alternative.
+\item $w_1^t = \frac{1}{(t+4)\ln(t+4)\ln^2\ln(t+4)}$, representing a slower decaying function.
+\item $w_1^t = \frac{1}{t^\alpha}$, with $\alpha \in (1, 2]$, to analyze the impact of faster decay rates.
+\item $w_1^t = \frac{1}{t^\alpha}$, with $\alpha \in (0, 1]$, to analyze the behavior with diverging weights.
 
-We run algorithm with various hyperparameters. As a metric of quality we use master's regret relative to the best partition.
 
-\textbf{Initialization weights}
-
-\hspace*{3mm} Default weights: $w_1^t= \frac{1}{(t+1)\ln^2(t+1)}$
-
-\hspace*{3mm} Experimental: $\frac{1}{t^\alpha}$, $\frac{1}{(t+1)\ln(t+1)\ln^2\ln(t+c)}, \frac{1}{e^t}$, etc.
+\end{itemize}
+\end{itemize}
 
 
+%\contourlength{0.1pt}
+%\item \contour{black}{Mixing Update Scheme:}
 
-%\hspace*{3mm} As the algorithm does not know the locations of generator switches, finding an optimal training window is also a challenge.
+\item Mixing Update Coefficients ($\alpha_t$):
+\begin{itemize}
+\item Default: $\alpha_t = \frac{1}{t+1}$
+\item Experimental: 
+\begin{itemize}
+\item $\alpha_t = \frac{1}{(t+1)^\beta}$, with $\beta \in (0, 2]$, to analyze different decay speeds.
+\item $\alpha_t = \frac{1}{t+c}$, with varying $c$, to analyze the influence of a constant shift.
+\item $\alpha_t = \frac{1}{c}$, with $100 \le c \le10000$
+\item $\alpha_t = \frac{1}{e^{t/3}}$, exponential decay, rapidly reducing the influence of initial weights.         
 
-\textbf{Mixing update coefficients}
+\end{itemize}
 
-\hspace*{3mm} Default coefficient: $\alpha_t = \frac{1}{t+1}$
 
-\hspace*{3mm} Experimental:  $\frac{1}{(t+1)^\beta}, \frac{1}{t+c}$, etc.
+\end{itemize}
 
-\textbf{Window size}
+\item Mixing Update Scheme:
 
-\hspace*{3mm} We vary window size to check algorithm performance in situations when experts lack information or when they often train on pieces made by different generators
+While GMPP in \cite{vvbook} utilizes a specific scheme, we explore various Mixing Fixed-Share Update schemes as presented in \cite{article02}:
+
+\[ \widetilde{w}_{t+1}^i = \sum_{q=1}^t\beta_t(q)\widetilde{w}_q^i  \]
+
+\begin{itemize}
+\item Start Vector Share (default in GMPP) --- emphasizes the initial weight vector and the most recent update:
+    \[\beta_t(q) =
+    \begin{cases}
+    \alpha_t, & q = 1 \\
+    0, & 1 < q < t \\
+    1 - \alpha_t, & q = t 
+    \end{cases}\]
+    
+        \item Uniform Past Share ---  assigns equal weight to all past updates : 
+            \[\beta_t(q) =
+            \begin{cases}
+            \alpha_t\frac{1}{t}, & 1 \le q < t \\
+            1 - \alpha_t, & q = t 
+            \end{cases}\]
+            
+        \item Decaying Past Share ---  assigns decreasing weights to past updates:
+            \[\beta_t(q) =
+            \begin{cases}
+            \alpha_t\frac{1}{(t-q)^\gamma}\frac{1}{Z_t}, & 1 \le q < t \\
+            1 - \alpha_t, & q = t
+            \end{cases}\]
+            \hfill ,with $Z_t = \sum_{q=0}^{t-1} \frac{1}{(t-q)^\gamma}, \gamma > 0$. 
+        
+\end{itemize}
+
+
+
+\item Window Size ($l$): We vary train window size $l \in \{5, 10, 20, 50, 100\}$ to check algorithm performance in situations when experts lack information or when they often train on pieces made by different generators.
+
+\end{enumerate}
+
+As a metric of quality we use $R_T$ --- master's regret relative to the best partition.
+We run experiments 4 times for each configuration of hyperparameters, and take the mean of the earned regrets.
 
 \subsection{Results}
 %\section{Results}
 
 
-
-
 \begin{table}[h]
-%\renewcommand{\arraystretch}{1.5}
-
 \centering
 
 \begin{tabular}{ccr}
@@ -332,42 +355,20 @@ $1 / t^{2}$ & 113298.39 \\
 $1 / ((x + 4) * \ln(x + 4) * \ln^2\ln(x + 4)) $  & 127634.11 \\
 \bottomrule
 \end{tabular}
-
-
-%\begin{tabular}{clr}
-%
-%\toprule
-%Weight function & Alpha function & Regret \\
-%\midrule
-%$\dfrac{1}{(t+1)\ln^2(t+1)}$  & $1 / (x + 1)$ & 136360.61 \\
-%$1 / t^{1.01}$ & $1 / (x + 1)$ & 94758.81 \\
-% $1 / t^{1.1}$& $1 / (x + 1)$ & 98359.26 \\
-%$1 / t^{2}$ & $1 / (x + 1)$ & 113298.39 \\
-%$1/ e^{x/4}$ & $1 / (x + 1)$ & 425358.37 \\
-%$\dfrac1{((x + 4) * \ln(x + 4) * (\ln(\ln(x + 4)))^2}$  & $1 / (x + 1)$ & 127634.11 \\
-%\bottomrule
-%\end{tabular}
-
-\caption{Dinamics of regret value over different sizes of train window} \hspace{16cm}
+\caption{Regret value for different weight functions} \hspace{16cm}
 \end{table}
 
 
 \begin{table}[h]
-
 \centering
-
 \begin{tabular}{r|ccc}
  &
 \multicolumn{2}{c}{Weight function} \\
-
 \toprule {Window size}  &
-%\toprule \backslashbox{$l$}{$w^t_1$}   &
+
 \centering $\dfrac{1}{(t+1)\ln^2(t+1)}$ &
 \centering $\dfrac1{t^{1.01}}$  & \tabularnewline
-%\centering $\dfrac1{c}$  & 
-%\midrule
-%\hspace*{6mm}
-%Window size &  &  &  &  \\
+
 \midrule
 5 &  188586.09 & 141788.84 \\ %& 113612.93 \\
 10 &  136360.61 &\ 94758.81 \\ %&\ 83776.19 \\
@@ -377,8 +378,59 @@ $1 / ((x + 4) * \ln(x + 4) * \ln^2\ln(x + 4)) $  & 127634.11 \\
 200 & 164746.91 & 113835.86 \\ %& 137111.18 \\
 \bottomrule
 \end{tabular}
-\caption{Regret value for different weight functions} \hspace{16cm}
+\caption{Dinamics of regret value over different sizes of train window} \hspace{16cm}
+
 \end{table}
+
+
+\includegraphics[width=\linewidth]{fig_52}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r|cccc}
+ & \multicolumn{3}{c}{Mixing scheme} \\
+\toprule
+{Weight function} & \centering start & \centering uniform past & \centering decaying past &  \\
+\midrule
+$1 / ((x + 1) * (\ln(x + 1))^2)$ & 175594.64 & 117175.93 & 122383.91 \\
+$1 / (x^{1.01})$ & 132268.30 & 110569.83 & 110438.09 \\
+$1 / (x^{1.1})$ & 135253.09 & 111366.88 & 111050.44 \\
+$1 / (x^{1.2})$ & 137976.99 & 112298.14 & 111873.03 \\
+$1 / (x^2)$ & 148080.01 & 123449.14 & 124473.63 \\
+$1 / (x^{0.1})$ & 111276.08 & 117830.57 & 115101.52 \\
+$1 / (x^{0.3})$ & 108946.40 & 115819.07 & 112900.36 \\
+$1 / (x^{0.5})$ & 108630.68 & 114153.63 & 111221.38 \\
+$1 / (x^{0.7})$ & 112027.20 & 112378.87 & 109775.49 \\
+$1 / (x^{0.9})$ & 122832.21 & 110783.66 & 109408.73 \\
+\bottomrule
+\end{tabular}
+\caption{Regret value for different Mixing Update schemes}
+\end{table}
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r|cccc}
+ &
+\multicolumn{3}{c}{Weight function} \\
+\toprule {$\gamma$}  &
+
+\centering $\dfrac1{t^{1.01}}$  &
+\centering $\dfrac1{t^{0.5}}$ &
+\centering $\dfrac{1}{c}$  & \tabularnewline
+
+\midrule
+$0.5$ & 110151.26 & 112279.88 & 118155.78 \\
+$1$ & 110438.09 & 111221.38 & 117241.85 \\
+$2$ & 111563.64 & 110089.54 & 116216.44 \\
+$4$ & 113922.30 & 109160.56 & 115299.68 \\
+\bottomrule
+\end{tabular}
+
+\caption{Regret value for different $\gamma$ in decaying Mixing Update scheme}
+\end{table}
+
 
 
 \begin{table}[h]
@@ -406,24 +458,44 @@ $1 / (x + 1000)$ &\ 92194.36 \\
 
 \includegraphics[width=1\linewidth]{improvement3}
 
+
+
+
+
 \section{Conclusion}
 
-%\noindent
-%$\mathsf{X}$ --- sample space to which the sequence of signals $x_1, x_2, \dots$ belongs\\
-%$\mathsf{Y}$ --- outcome space to which the sequence of the corresponding responces $y_1, y_2, \dots$ belongs \\
-%$\mathcal{N}$ --- set of experts, usually natural numbers \\
-% $\mathsf{D}$ --- desicion space, to which predictions belong \\
-% $ \lambda: \mathsf{D} \times \mathsf{Y} \rightarrow \RR_+$ --- nonnegative loss function \\
-%
-%\noindent
-%$L^i_T = \sum\limits_{t = 1}^T l^i_t$ --- cumulative loss of expert $i$ during the first T steps \\
-%$H_T = \sum\limits_{t = 1}^T h_t$ --- master's cumulative loss during the first T steps \\
-%$R^i_t = H_T - L^i_T$ --- master's regret relative to the expert $i$
-%
-%\paragraph{Algorithm}
-%
-%\noindent
 
+%
+%\begin{figure}[h]
+%\begin{minipage}[t]{0.4\textwidth}
+%
+%\centering
+%
+%\begin{tabular}{cc}
+%\toprule
+%Alpha function & regret \\
+%\midrule
+%$1 / (x + 1)$ &\ 94758.81 \\
+%$1 / (x + 1)^{0.5}$ & 149472.52 \\
+%$1 / (x + 1)^{1.5}$ &\ 92351.58 \\
+%$1 / (x + 1)^2)$ &\ 99120.36 \\
+%$1 / e^{x/3}$ &\ 99477.13 \\
+%$1 / (x + 10)$ &\ 94729.22 \\
+%$1 / (x + 100)$ &\ 94441.30 \\
+%$1 / (x + 1000)$ &\ 92194.36 \\
+%\bottomrule
+%\end{tabular}
+%
+%\caption{Regret value for different alpha functions} \hspace{16cm}
+%
+%\end{minipage}
+%\hfill
+%\begin{minipage}[t]{0.6\textwidth}
+%% Image code goes here
+%\includegraphics[width=0.7\linewidth]{fig_52}
+%\caption{Comparison of algorithm performance for different mixing schemes}
+%\end{minipage}
+%\end{figure}
 
 
 %

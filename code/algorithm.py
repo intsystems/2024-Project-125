@@ -1,6 +1,5 @@
 import numpy as np
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from experts import Expert, ArimaExpert
 
 DEFAULT_CONST = 2.10974
@@ -201,13 +200,18 @@ class Algorithm(object):
             uniform_component = self.weights_all[:self.curr_time, 1:self.total_time].mean(axis=0)
             self.weights[1:self.total_time] = (alpha * uniform_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
-        if self.mixing_type == "decaying past":
-            gamma = 1
+        if self.mixing_type.startswith("decaying past"):
+            if self.mixing_type == "decaying past":
+                gamma = 1
+            else:
+                gamma = float(self.mixing_type.removeprefix("decaying past-"))
+
             mixing = (self.curr_time - np.arange(self.curr_time)) ** gamma
             mixing_weights = mixing / mixing.sum()
             decaying_component = (mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=1)
             self.weights[1:self.total_time] = (alpha * decaying_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
+
 
     def receive_signal(self):
         """

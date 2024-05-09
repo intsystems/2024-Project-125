@@ -201,7 +201,9 @@ class Analysis(object):
                 ((k + 1) * (2 * np.log(np.log(t)) + np.log(self.algo.weight_const)) + (2 * k + 3) * np.log(t)))
 
 
-def draw_several(from_start=True, logs=None, labels=None, colors=None, title=None, fig_size=(10, 5), loc='upper left'):
+def draw_several(from_start=True, logs=None, labels=None, colors=None,
+                 best_color="black", best_label="Best partition",
+                 title=None, fig_size=(10, 5), loc='upper left', save_path=None):
     if title is None:
         title = "Master total losses for different algorithms"
     shift = 0 if from_start else logs[0].shift
@@ -209,6 +211,8 @@ def draw_several(from_start=True, logs=None, labels=None, colors=None, title=Non
     plt.figure(figsize=fig_size)
 
     grid = np.arange(logs[0].total_time - shift)
+
+    plt.plot(grid, logs[0].ideal_losses[shift:].cumsum(), label=best_label, color=best_color)
 
     for log, label, color in zip(logs, labels, colors):
         plt.plot(grid, log.master_losses_all[shift:].cumsum(), label=label, color=color)
@@ -229,4 +233,6 @@ def draw_several(from_start=True, logs=None, labels=None, colors=None, title=Non
                               s=f"gen {gen_idx}", color='orange', rotation=15)
 
     plt.title(title, fontsize=15)
+    if save_path is not None:
+        plt.savefig(save_path)
     plt.show()
