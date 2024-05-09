@@ -8,6 +8,7 @@ import dataclasses
 from synthesizer import Synthesizer
 from generator import Generator
 from algorithm import Algorithm
+from analysis import Analysis
 
 from hypers import weight_hypers
 from hypers import alpha_hypers
@@ -52,6 +53,7 @@ class Experiment:
     random_seed: int
 
     key_w: str
+    mixing_type: str
     key_a: str
     train_window: int
     noise_var: float
@@ -92,6 +94,7 @@ class Experiment:
             filepath=filepath,
             random_seed=exp_dict['random_seed'],
             key_w=exp_dict['key_w'],
+            mixing_type=exp_dict['mixing_type'],
             key_a=exp_dict['key_a'],
             train_window=exp_dict['train_window'],
             noise_var=exp_dict['noise_var'],
@@ -114,52 +117,58 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def run_experiments(filepath, seeds, params, different_noises, different_windows, interesting, share_type="start"):
+def run_experiments(filepath, seeds, params, different_noises, different_windows, interesting):
     experiments = []
 
     for rs in seeds:
         for noise_var in different_noises:
             for train_window in different_windows:
+                np.random.seed(rs)
                 synt = Synthesizer(params.series_type, dim=params.dim,
                                    low=params.low, high=params.high, clip=params.clip,
-                                   noise_var=noise_var, workers_num=params.workers_num, random_seed=rs)
+                                   noise_var=noise_var, workers_num=params.workers_num)
                 gen = Generator(params.series_type, synt)
                 gen.generate(length=params.length, from_start=params.from_start,
                              lower_bound=params.lower_bound, upper_bound=params.upper_bound,
                              alternating=params.alternating)
 
-                for key_w, key_a in interesting:
+                for key_w, mixing_type, key_a in interesting:
                     hyper_w = weight_hypers[key_w]
                     hyper_a = alpha_hypers[key_a]
-                    algo = Algorithm(params.series_type, gen, train_window=train_window, a=params.a, b=params.b,
-                                     weights_func=hyper_w.func, weight_const=hyper_w.const, alpha_func=hyper_a.func,
-                                     share_type=share_type)
+                    algo = Algorithm(params.series_type, gen,
+                                     train_window=train_window, a=params.a, b=params.b,
+                                     weights_func=hyper_w.func, weight_const=hyper_w.const,
+                                     mixing_type=mixing_type, alpha_func=hyper_a.func)
                     gen.launch()
                     algo.run()
-                    algo.post_calculations(from_start=params.from_start)
+
+                    anl = Analysis(algo)
+                    anl.post_calculations(from_start=params.from_start)
 
                     logs = Logs(total_time=algo.total_time,
-                                shift=algo.shift,
+                                shift=anl.shift,
                                 indexes=gen.indexes,
                                 stamps=gen.stamps,
                                 master_losses_all=algo.master_losses_all,
-                                ideal_losses=algo.ideal_losses,
-                                theoretical_upper=algo.theoretical_upper,
+                                ideal_losses=anl.best_partition_losses,
+                                theoretical_upper=anl.theoretical_upper,
                                 )
 
                     experiment = Experiment(filepath=filepath,
                                             random_seed=rs,
                                             key_w=key_w,
+                                            mixing_type=mixing_type,
                                             key_a=key_a,
                                             train_window=train_window,
                                             noise_var=noise_var,
                                             params=params,
                                             logs=logs,
-                                            regret=algo.regret
+                                            regret=anl.regret
                                             )
 
                     experiments.append(experiment)
 
+                    del anl
                     del algo
                 del gen
                 del synt
@@ -177,16 +186,18 @@ def run_experiments(filepath, seeds, params, different_noises, different_windows
 def experiments_to_df(experiments):
     dct = {}
     for experiment in experiments:
-        key = (experiment.noise_var, experiment.train_window, experiment.key_w, experiment.key_a)
+        key = (experiment.noise_var, experiment.train_window,
+               experiment.key_w, experiment.mixing_type, experiment.key_a)
         if key not in dct:
             hyper_w = weight_hypers[experiment.key_w]
             hyper_a = alpha_hypers[experiment.key_a]
-            dct[key] = [experiment.noise_var, experiment.train_window, hyper_w.repr, hyper_a.repr]
+            dct[key] = [experiment.noise_var, experiment.train_window,
+                        hyper_w.repr, experiment.mixing_type, hyper_a.repr]
         dct[key].append(round(experiment.regret, 2))
 
     df = pd.DataFrame(dct).transpose()
 
-    labels = ["noise_var", "train_window", "weight_function", "alpha_function"]
+    labels = ["noise_var", "train_window", "weight_function", "mixing_type", "alpha_function"]
     indent = len(labels)
 
     renaming = {}
@@ -199,11 +210,12 @@ def experiments_to_df(experiments):
     df = df.set_index(np.arange(df.index.size)).rename(columns=renaming)
     ordered_repr = (sorted(df['noise_var'].unique()) +
                     sorted(df['train_window'].unique()) +
+                    sorted(df['mixing_type'].unique()) +
                     [wh.repr for wh in weight_hypers.values()] +
                     [ah.repr for ah in alpha_hypers.values()])
     df = df.sort_values(labels, key=lambda col: col.apply(lambda x: ordered_repr.index(x)))
-    df.insert(indent, "regret", df.iloc[:, indent:].mean(axis=1))
-    df["regret"] = df["regret"].astype(float).round(2)
+    df.insert(indent, "mean", df.iloc[:, indent:].mean(axis=1))
+    df["mean"] = df["mean"].astype(float).round(2)
     return df
 
 
@@ -216,7 +228,7 @@ def load_experiments(filepath):
     return experiments, df
 
 
-def draw_regrets(logs, show=None, title=None, fig_size=(15, 10)):
+def draw_logs(logs, show=None, title=None, fig_size=(15, 10)):
     if show is None:
         show = ["master"]
     if title is None:

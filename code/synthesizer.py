@@ -1,18 +1,17 @@
-import random
 import statsmodels.tsa.arima_process as arima_p
 from statsmodels.tsa.arima.model import ARIMA
 import numpy as np
-from random import uniform
+import dataclasses
 
 
-def generate_linear_time_series(weights, n):
+def generate_affine_time_series(weights, n):
     dim = len(weights)
     signals = np.random.normal(0, 1, size=(n, dim))
     responses = signals @ weights
     return signals, responses
 
 
-def generate_arima(ar_params, ma_params, sigma, n):
+def generate_arima_series(ar_params, ma_params, sigma, n):
     p = len(ar_params)
     q = len(ma_params)
 
@@ -27,77 +26,27 @@ def generate_arima(ar_params, ma_params, sigma, n):
     return series, epsilon
 
 
-def generate_ar_params(rs):
-    """
-    Generates a random AR(1) parameter within a specific range.
-
-    Args:
-        rs (int): The random seed for reproducibility.
-
-    Returns:
-        float: The generated AR(1) parameter.
-    """
-    random.seed(rs)
-    ar_1 = uniform(-1, 1) * 0.9
+def create_ar_params():
+    ar_1 = np.random.uniform(-1, 1) * 0.9
     return [ar_1]
 
 
-def generate_ma_params(rs):
-    """
-    Generates a random MA(1) parameter within a specific range.
-
-    Args:
-        rs (int): The random seed for reproducibility.
-
-    Returns:
-        float: The generated MA(1) parameter.
-    """
-    random.seed(rs)
-    ma_1 = uniform(-1, 1) * 0.9
+def create_ma_params():
+    ma_1 = np.random.uniform(-1, 1) * 0.9
     return [ma_1]
 
 
-def generate_arima_params(rs):
-    """
-    Generates random ARIMA(1, 0, 1) parameters.
-
-    Args:
-        rs (int): The random seed for reproducibility.
-
-    Returns:
-        tuple: A tuple containing the AR parameters (np.array) and MA parameters (np.array).
-    """
-    np.random.seed(rs)
-    random.seed(rs)
-    # ar = np.r_[1, generate_ar_params(rs + 1)]
-    # ma = np.r_[1, generate_ma_params(rs + 2)]
-    ar = generate_ar_params(rs + 1)
-    ma = generate_ar_params(rs + 2)
-    return ar, ma
+@dataclasses.dataclass
+class GenParams:
+    weights: np.array
+    ar_params: list[float] | None
+    ma_params: list[float] | None
 
 
 class Synthesizer(object):
-    """
-    This class is responsible for generating synthetic time series data with different characteristics.
-    """
 
     def __init__(self, series_type, dim, low, high, clip,
-                 noise_var, workers_num, random_seed):
-        """
-        Synthesizer constructor
-
-        Args:
-            series_type (str, optional): The type of time series to generate (e.g., "default", "arima").
-            dim (int, optional): The dimensionality of the signals.
-            low (int, optional): The lower bound for generating random weights.
-            high (int, optional): The upper bound for generating random weights.
-            clip (tuple, optional): A tuple (min, max) specifying the range to clip the responses. Defaults to None.
-            noise_var (int, optional): The variance of the Gaussian noise added to the responses. Defaults to 1.
-            workers_num (int, optional): The number of different generators to simulate. Defaults to 2.
-            random_seed (int, optional): The random seed for reproducibility. Defaults to 18.
-        """
-
-        self.rs = random_seed
+                 noise_var, workers_num):
         self.series_type = series_type
         self.low = low
         self.high = high
@@ -105,23 +54,9 @@ class Synthesizer(object):
         self.noise_var = noise_var
         self.dim = dim
         self.workers_num = workers_num
-        self.params_list = None
-        self.arima_params = None
 
-    def generate_indexes_and_sizes(self, length, from_start, lower_bound, upper_bound, alternating):
-        """
-        Generates indices and sizes for the pieces of the time series.
 
-        Args:
-            length (int): The length of the time series.
-            lower_bound (int): The lower bound for the piece sizes.
-            upper_bound (int): The upper bound for the piece sizes.
-            alternating (bool): Whether to use alternating indices for the generators.
-
-        Returns:
-            tuple: A tuple containing the piece indices (np.array) and piece sizes (np.array).
-        """
-        np.random.seed(self.rs)
+    def create_indexes_and_sizes(self, length, from_start, lower_bound, upper_bound, alternating):
         pieces_indexes = np.arange(self.workers_num).tolist()
         pieces_sizes = np.random.randint(lower_bound, upper_bound, size=self.workers_num).tolist()
         curr_total = sum(pieces_sizes) if from_start else 0
@@ -131,9 +66,7 @@ class Synthesizer(object):
             if alternating:
                 while num == pieces_indexes[-1]:
                     num = np.random.randint(self.workers_num)
-                pieces_indexes.append(num)
-            else:
-                pieces_indexes.append(num)
+            pieces_indexes.append(num)
 
             size = np.random.randint(lower_bound, upper_bound)
             if size > length - curr_total:
@@ -144,62 +77,37 @@ class Synthesizer(object):
         return pieces_indexes, pieces_sizes
 
     def generate_ts_list(self, length, from_start, lower_bound, upper_bound, alternating):
-        """
-        Generates a list of time series pieces with varying parameters.
-
-        Args:
-            length (int): The length of the time series.
-            lower_bound (int): The lower bound for the piece sizes.
-            upper_bound (int): The upper bound for the piece sizes.
-            alternating (bool): Whether to use alternating indices for the generators.
-
-        Returns:
-            tuple: A tuple containing the parameter list, piece indices, and the list of time series pieces.
-        """
-        pieces_indexes, pieces_sizes = (self.generate_indexes_and_sizes
+        pieces_indexes, pieces_sizes = (self.create_indexes_and_sizes
                                         (length, from_start, lower_bound, upper_bound, alternating))
         total_time = sum(pieces_sizes)
+        params_list = self.generate_generators_params()
+        ts_list = [self.generate_time_series(pieces_sizes[i], params_list[idx]) for i, idx in enumerate(pieces_indexes)]
+        return total_time, params_list, pieces_indexes, ts_list
 
-        self.params_list = [self.generate_default_weights(self.rs + i) for i in range(self.workers_num)]
-        if self.series_type == "arima":
-            self.arima_params = [generate_arima_params(self.rs + i) for i in range(self.workers_num)]
-        ts_list = [self.generate_time_series(idx, pieces_sizes[i], self.rs + i) for i, idx in enumerate(pieces_indexes)]
-        return total_time, self.params_list, pieces_indexes, ts_list
+    def generate_generators_params(self):
+        all_generators_params = []
+        for i in range(self.workers_num):
+            generator_params = GenParams(weights=self.generate_default_weights(),
+                                         ar_params=create_ar_params() if self.series_type == "arima" else None,
+                                         ma_params=create_ma_params() if self.series_type == "arima" else None)
+            all_generators_params.append(generator_params)
+        return all_generators_params
 
-    def generate_default_weights(self, rs):
-        """
-        Generates random weights for the linear model.
+    def generate_default_weights(self):
 
-        Args:
-            rs (int): The random seed for reproducibility.
-
-        Returns:
-            np.array: An array of random weights.
-        """
-        np.random.seed(rs)
         return np.random.randint(low=self.low, high=self.high, size=self.dim)
 
-    def generate_time_series(self, idx, n, rs):
-        """
-        Generates a synthetic time series using a linear model with Gaussian noise.
+    def generate_time_series(self, n, gen_params):
 
-        Args:
-            n (int): The length of the time series.
-            rs (int): The random seed for reproducibility.
-
-        Returns:
-            tuple: A tuple containing the generated signals (np.array) and responses (np.array).
-        """
-        np.random.seed(rs)
         final_signals = np.empty((0, self.dim))
         final_responses = np.empty(0)
-        weights = self.params_list[idx]
+        weights = gen_params.weights
         while final_responses.size < n:
-            signals, responses = generate_linear_time_series(weights, n)
+            signals, responses = generate_affine_time_series(weights, n)
             if self.series_type == 'arima':
-                ar_params, ma_params = self.arima_params[idx]
+                ar_params, ma_params = gen_params.ar_params, gen_params.ma_params
                 sigma = self.noise_var
-                arima_series, err = generate_arima(ar_params, ma_params, sigma, n)
+                arima_series, err = generate_arima_series(ar_params, ma_params, sigma, n)
                 noise = arima_series
             else:
                 noise = np.random.normal(0, self.noise_var, n)

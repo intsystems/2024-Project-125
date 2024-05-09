@@ -22,7 +22,8 @@ class Algorithm(object):
 
     def __init__(self, series_type, generator, train_window,
                  total_time=None, a=None, b=None,
-                 weights_func=None, weight_const=None, alpha_func=None, share_type="start"):
+                 weights_func=None, weight_const=None,
+                 mixing_type="start", alpha_func=None):
         """
         Algorithm constructor
 
@@ -56,7 +57,7 @@ class Algorithm(object):
             if weights_func is not None else default_weights_func
         self.alpha_func = alpha_func \
             if alpha_func is not None else default_alpha_func
-        self.share_type = share_type
+        self.mixing_type = mixing_type
         self.loss_func = lambda x, y: np.square(x - y)
 
         self.signals = np.zeros((self.total_time, self.generator.synthesizer.dim))
@@ -79,35 +80,7 @@ class Algorithm(object):
         self.experts_losses_all = np.zeros((self.total_time, self.total_time))
         self.master_losses_all = np.zeros(self.total_time)
 
-        self.segment_losses = np.full((self.generator.pieces_num, self.total_time), np.inf)
-        self.best_combo = np.zeros(self.generator.pieces_num)
-        self.ideal_losses = np.zeros(self.total_time)
-        self.zero_losses = np.zeros(self.total_time)
-
-        self.regret = 0.
-
-        self.theoretical_upper = np.zeros(self.total_time)
         self.weights_all = np.zeros((self.total_time, self.total_time))
-
-        self.shift = 0
-        self.indexes = self.generator.indexes
-        self.stamps = self.generator.stamps
-
-    def theoretical_upper_func(self, k, t):
-        """
-        Calculates the theoretical upper bound on the regret of the GMPP algorithm.
-
-        Args:
-            k (int): The number of experts that have been activated so far.
-            t (int): The current time step.
-
-        Returns:
-            float: The theoretical upper bound on the regret.
-        """
-        if t <= 1:
-            return 0
-        return (1 / self.eta *
-                ((k + 1) * (2 * np.log(np.log(t)) + np.log(self.weight_const)) + (2 * k + 3) * np.log(t)))
 
     def run(self):
         """
@@ -162,10 +135,6 @@ class Algorithm(object):
         past = int(max(self.curr_time - self.train_window, 0))
 
         if self.series_type == "arima":
-            # idx = self.curr_time % self.generator.synthesizer.workers_num
-            # ar, ma = self.generator.synthesizer.arima_params[idx]
-            # possible = self.generator.synthesizer.arima_params
-            # possible = [(ar, ma)]
             expert = ArimaExpert()
         else:
             expert = Expert()
@@ -225,25 +194,20 @@ class Algorithm(object):
         which combines the initial weights with the loss-updated weights.
         """
         alpha = self.alpha_func(self.curr_time)
-        if self.share_type == "start":
+        if self.mixing_type == "start":
             self.weights[1:self.total_time] = (alpha * self.weights1
                                                + (1 - alpha) * self.weights[1:self.total_time])
-        if self.share_type == "uniform past":
+        if self.mixing_type == "uniform past":
             uniform_component = self.weights_all[:self.curr_time, 1:self.total_time].mean(axis=0)
             self.weights[1:self.total_time] = (alpha * uniform_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
-        if self.share_type == "decaying past":
+        if self.mixing_type == "decaying past":
             gamma = 1
             mixing = (self.curr_time - np.arange(self.curr_time)) ** gamma
             mixing_weights = mixing / mixing.sum()
             decaying_component = (mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=1)
-            # print((mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=0))
-            # if decaying_component >= 1:
-
             self.weights[1:self.total_time] = (alpha * decaying_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
-
-        # assert (1 - self.weights[1:self.total_time].sum() > 0)
 
     def receive_signal(self):
         """
@@ -256,185 +220,3 @@ class Algorithm(object):
         Receives the true response from the generator.
         """
         self.responses[self.curr_time] = self.generator.get_response()
-
-    def count_segment_losses(self):
-        """
-            Calculates the cumulative losses for each expert and the master algorithm
-                on each segment of the data stream.
-        """
-        for seg_num, left, right in zip(
-                np.arange(self.generator.pieces_num),
-                self.generator.stamps,
-                self.generator.stamps[1:]
-        ):
-            for i in np.arange(1, left):
-                self.segment_losses[seg_num, i] = self.experts_losses_all[left:right, i].sum()
-            for i in np.arange(left, self.total_time):
-                self.segment_losses[seg_num, i] = self.master_losses_all[left:right].sum()
-
-        self.best_combo = np.argmin(self.segment_losses[:, 1:], axis=1) + 1
-        for seg_num, left, right in zip(
-                np.arange(self.generator.pieces_num),
-                self.generator.stamps,
-                self.generator.stamps[1:]
-        ):
-            # self.ideal_losses[left:right] = self.experts_losses_all[left:right, self.best_combo[seg_num]]
-            if seg_num < self.generator.synthesizer.workers_num:
-                self.ideal_losses[left:right] = self.master_losses_all[left:right]
-            else:
-                self.ideal_losses[left:right] = self.experts_losses_all[left:right, self.best_combo[seg_num]]
-
-    def count_theoretical_upper(self):
-        k = 0
-        for idx, left, right in zip(self.generator.indexes, self.generator.stamps, self.generator.stamps[1:]):
-            if left < self.shift:
-                continue
-            k += 1
-            for t in np.arange(left, right):
-                self.theoretical_upper[t] = self.theoretical_upper_func(k, t - self.shift)
-
-        self.theoretical_upper[self.shift:] += self.ideal_losses[self.shift:].cumsum()
-
-    def post_calculations(self, from_start=True):
-        """
-        Performs post-processing calculations,
-            including segment loss calculations and theoretical upper bound computation.
-        """
-        if not from_start:
-            self.shift = self.generator.stamps[self.generator.synthesizer.workers_num]
-
-        self.count_segment_losses()
-        self.count_theoretical_upper()
-        self.zero_losses = self.loss_func(self.responses, 0)
-        self.regret = self.master_losses_all[self.shift:].sum() - self.ideal_losses[self.shift:].sum()
-
-    def draw_all(self, show=None, show_experts=None,
-                 show_axes=None, height_ratios=None, suptitle=None, fig_size=(15, 10)):
-        """
-        Visualizes the performance of the AA algorithm,
-            including predictions, losses, regrets, and theoretical bounds.
-
-        Args:
-            show (list, optional): A list of elements to display on the plots (e.g., "master", "zero", "ideal").
-                Defaults to ["master"].
-            show_experts (list, optional): A list of expert indices to display on the plots. Defaults to [].
-            show_axes (list, optional): A list of axes to display on the plots (e.g., "value", "loss", "regret").
-                Defaults to ["regret"].
-            height_ratios (list, optional): A list of height ratios for the subplots.
-                Defaults to [1 for _ in show_axes].
-            suptitle (string, optional): Title for the plot
-            fig_size (tuple, optional): Figure size. Defaults to (15,10).
-
-        Returns:
-            tuple: A tuple containing the figure and axes objects.
-        """
-
-        if show is None:
-            show = ["master"]
-        if show_experts is None:
-            show_experts = []
-        if show_axes is None:
-            show_axes = ["regret"]
-        if height_ratios is None:
-            height_ratios = [1 for _ in show_axes]
-        if suptitle is None:
-            suptitle = "Algorithm"
-        assert len(show_axes) == len(height_ratios), "Wrong sizes"
-
-        text_idx = 0
-
-        fig, axes = plt.subplots(len(show_axes), 1, figsize=fig_size, sharex=True, height_ratios=height_ratios)
-        ax = [axes] if len(show_axes) == 1 else axes
-        grid = np.arange(self.total_time - self.shift)
-
-        try:
-            idx = show_axes.index("value")
-
-            ax[idx].plot(grid, self.responses[self.shift:], label="Real responses",
-                         color='black')
-
-            if "zero" in show:
-                ax[idx].plot(grid, np.full(self.total_time - self.shift, 0),
-                             label="Zero expert predictions",
-                             color='yellow')
-            for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_predictions_all.T[expert_num][self.shift:],
-                             label=f"Expert {expert_num} predictions")
-            if "master" in show:
-                ax[idx].plot(grid, self.master_predictions_all[self.shift:],
-                             label="Master predictions",
-                             color='red')
-            ax[idx].set_xlabel("Time")
-            ax[idx].set_ylabel("Value")
-            ax[idx].xaxis.set_ticks_position('top')
-            ax[idx].legend()
-
-        except ValueError:
-            pass
-
-        try:
-            idx = show_axes.index("loss")
-            text_idx = idx
-
-            if "ideal" in show:
-                ax[idx].plot(grid, self.ideal_losses[self.shift:], label="Ideal expert losses",
-                             color='green')
-            if "zero" in show:
-                ax[idx].plot(grid, self.zero_losses[self.shift:],
-                             label="Zero expert losses",
-                             color='yellow')
-            for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:],
-                             label=f"Expert {expert_num} losses")
-            if "master" in show:
-                ax[idx].plot(grid, self.master_losses_all[self.shift:], label="Master losses",
-                             color='red')
-
-            ax[idx].set_ylabel("Loss")
-            ax[idx].legend()
-
-        except ValueError:
-            pass
-
-        try:
-            idx = show_axes.index("regret")
-
-            if "ideal" in show:
-                ax[idx].plot(grid, self.ideal_losses[self.shift:].cumsum(),
-                             label="Ideal expert cumulative losses", color='green')
-            if "zero" in show:
-                ax[idx].plot(grid, self.zero_losses[self.shift:].cumsum(),
-                             label="Zero expert cumulative losses", color='yellow')
-
-            for expert_num in show_experts:
-                ax[idx].plot(grid, self.experts_losses_all.T[expert_num][self.shift:].cumsum(),
-                             label=f"Expert {expert_num} cumulative losses")
-
-            if "master" in show:
-                ax[idx].plot(grid, self.master_losses_all[self.shift:].cumsum(),
-                             label="Master cumulative losses", color='red')
-
-            if "theoretical" in show:
-                ax[idx].plot(grid, self.theoretical_upper[self.shift:],
-                             label="Theoretical upper bound", color='black')
-
-            ax[idx].set_xlabel("Time")
-            ax[idx].set_ylabel("Regret")
-            ax[idx].legend()
-
-        except ValueError:
-            pass
-
-        bottom, top = ax[text_idx].get_ybound()
-        left, right = ax[text_idx].get_xbound()
-        for gen_idx, gen_stamp in zip(np.r_[self.indexes, -1], self.stamps):
-            if gen_stamp < self.shift:
-                continue
-            for i in range(len(show_axes)):
-                ax[i].axvline(gen_stamp - self.shift, color='orange', linestyle=':')
-            if gen_idx != -1:
-                ax[text_idx].text(x=gen_stamp - self.shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
-                                  s=f"gen {gen_idx}", color='orange', rotation=15)
-
-        fig.suptitle(suptitle, fontsize=15)
-        plt.show()

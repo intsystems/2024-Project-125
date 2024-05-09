@@ -1,6 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 
+
 DEFAULT_CONST = 2.10974  # paper
 
 
@@ -84,7 +85,7 @@ def weights_func_slow_100(x):
     return 1 / ((x + 100) * np.log(x + 100) * np.square(np.log(np.log(x + 100))))
 
 
-CONST = 3000.
+CONST = 4000.
 
 
 def weights_func_const(x):
@@ -99,16 +100,16 @@ def weights_func_diverge_01(x):
     return 1 / (x ** 0.1) / CONST
 
 
-def weights_func_diverge_02(x):
-    return 1 / (x ** 0.2) / CONST
+def weights_func_diverge_03(x):
+    return 1 / (x ** 0.3) / CONST
 
 
 def weights_func_diverge_05(x):
     return 1 / (x ** 0.5) / CONST
 
 
-def weights_func_diverge_08(x):
-    return 1 / (x ** 0.8) / CONST
+def weights_func_diverge_07(x):
+    return 1 / (x ** 0.7) / CONST
 
 
 def weights_func_diverge_09(x):
@@ -125,6 +126,17 @@ def weights_func_shift_100(x):
 
 def weights_func_shift_1000(x):
     return 1 / (x + 1000) / CONST
+
+
+CONST_D_1 = 1.
+
+CONST_D_10 = 10.
+
+CONST_D_100 = 100.
+
+CONST_D_1000 = 1000.
+
+CONST_D_10000 = 10000.
 
 
 @dataclass
@@ -151,32 +163,45 @@ weight_hypers = {
     "const": WeightsHyper(CONST, weights_func_const, "1 / c"),
     "diverge_1": WeightsHyper(CONST, weights_func_diverge_1, "1 / x"),
     "diverge_01": WeightsHyper(CONST, weights_func_diverge_01, "1 / (x^0.1)"),
-    "diverge_02": WeightsHyper(CONST, weights_func_diverge_02, "1 / (x^0.2)"),
+    "diverge_03": WeightsHyper(CONST, weights_func_diverge_03, "1 / (x^0.3)"),
     "diverge_05": WeightsHyper(CONST, weights_func_diverge_05, "1 / (x^0.5)"),
-    "diverge_08": WeightsHyper(CONST, weights_func_diverge_08, "1 / (x^0.8)"),
+    "diverge_07": WeightsHyper(CONST, weights_func_diverge_07, "1 / (x^0.7)"),
     "diverge_09": WeightsHyper(CONST, weights_func_diverge_09, "1 / (x^0.9)"),
     "shift_10": WeightsHyper(CONST, weights_func_shift_10, "1 / (x + 10)"),
     "shift_100": WeightsHyper(CONST, weights_func_shift_100, "1 / (x + 100)"),
     "shift_1000": WeightsHyper(CONST, weights_func_shift_1000, "1 / (x + 1000)"),
+
+    "default_d1": WeightsHyper(CONST_D_1, default_weights_func, "1 / ((x + 1) * (ln(x + 1))^2)d1"),
+    "default_d100": WeightsHyper(CONST_D_100, default_weights_func, "1 / ((x + 1) * (ln(x + 1))^2)d100"),
+
+    "const_d1": WeightsHyper(CONST_D_1, weights_func_const, "1 / d1"),
+    "const_d100": WeightsHyper(CONST_D_100, weights_func_const, "1 / d100"),
+
+    "diverge_05_d1": WeightsHyper(CONST_D_1, weights_func_diverge_05, "1 / (x^0.5)d1"),
+    "diverge_05_d100": WeightsHyper(CONST_D_100, weights_func_diverge_05, "1 / (x^0.5)d100"),
+
+    "simple_101_d1": WeightsHyper(CONST_D_1, weights_func_101, "1 / (x^1.01)d1"),
+    "simple_101_d100": WeightsHyper(CONST_D_100, weights_func_101, "1 / (x^1.01)d100"),
 }
 
 
 # ------------------------------------------------
 
-def alpha_func_const_13(x):
-    return 1 / 3
-
-
-def alpha_func_const_23(x):
-    return 2 / 3
-
-
-def alpha_func_const_89(x):
-    return 8 / 9
-
 
 def alpha_func_const_1100(x):
     return 1 / 100
+
+
+def alpha_func_const_1500(x):
+    return 1 / 500
+
+
+def alpha_func_const_11000(x):
+    return 1 / 1000
+
+
+def alpha_func_const_15000(x):
+    return 1 / 5000
 
 
 def default_alpha_func(x):
@@ -246,11 +271,11 @@ class AlphaHyper:
 
 
 alpha_hypers = {
-    "const_13": AlphaHyper(alpha_func_const_13, "1 / 3"),
-    "const_23": AlphaHyper(alpha_func_const_23, "2 / 3"),
-    "const_89": AlphaHyper(alpha_func_const_89, "8 / 9"),
-    "const_1100": AlphaHyper(alpha_func_const_1100, "1 / 100"),
     "default": AlphaHyper(default_alpha_func, "1 / (x + 1)"),
+    "const_1100": AlphaHyper(alpha_func_const_1100, "1 / 100"),
+    "const_1500": AlphaHyper(alpha_func_const_1500, "1 / 500"),
+    "const_11000": AlphaHyper(alpha_func_const_11000, "1 / 1000"),
+    "const_15000": AlphaHyper(alpha_func_const_15000, "1 / 5000"),
     "simple_01": AlphaHyper(alpha_func_01, "1 / (x + 1)^0.1"),
     "simple_05": AlphaHyper(alpha_func_05, "1 / (x + 1)^0.5"),
     "simple_11": AlphaHyper(alpha_func_11, "1 / (x + 1)^1.1"),

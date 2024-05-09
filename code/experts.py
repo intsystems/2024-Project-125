@@ -13,9 +13,7 @@ class ArimaExpert(object):
         self.arima_model = None
         self.ar_params = None
         self.ma_params = None
-
-        self.restrict = lambda x: np.clip(x, -1e9, 1e9)
-
+        self.restrictor = lambda x: np.clip(x, -1e9, 1e9)
         self.linreg_term = 0.
         self.arima_terms = []
 
@@ -30,12 +28,11 @@ class ArimaExpert(object):
             results = ARIMA(residuals, order=(1, 0, 1)).fit(start_params=[0, 0, 0, 1])
             dct = {term: val for term, val in zip(results.param_terms, results.params)}
             self.ar_params, self.ma_params = [dct["ar"]], [dct["ma"]]
-            # print(self.ar_params, self.ma_params)
 
     def predict(self, X):
         self.linreg_term = self.linreg_model.predict(X)[0]
         arima_term = forecast_next(self.ar_params, self.ma_params, self.true_values, self.arima_terms)
-        arima_term = self.restrict(arima_term)
+        arima_term = self.restrictor(arima_term)
         self.arima_terms.append(arima_term)
         return self.linreg_term + arima_term
 

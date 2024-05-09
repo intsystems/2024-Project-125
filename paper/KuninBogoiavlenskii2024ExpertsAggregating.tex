@@ -189,7 +189,7 @@ representing the master's cumulative loss during the first T steps, we can defin
 \STATE\textbf{\textperiodcentered}~ Signal $x_t$ is received 
 \STATE\textbf{\textperiodcentered}~ Experts' predictions $f_t^i = f_t^i(x_t), 1 \le i \le t$ 
 \STATE\textbf{\textperiodcentered}~ Computation of normalized weights of experts  $1 \le i \le t$: $$\widehat{w}^i_t = \dfrac{w^i_t}{\sum_{j=1}^t w_t^j}$$
-\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \mathit{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
+\STATE\textbf{\textperiodcentered}~ Master's prediction evaluation $\gamma_t = \textit{Subst}(\mathbf{f_t}, \mathbf{\widehat{w}_t}) = \dfrac{a+b}{2} + \dfrac{1}{2\eta(b-a)}\cdot \ln \dfrac{\sum\limits_{i \in \mathcal{N}} \hat w_t^i e^{-\eta(b - f_i)^2}}{\sum\limits_{i \in \mathcal{N}}  \hat w_t^i e^{-\eta(a - f_i)^2}}$, \\ where $\mathbf{\widehat{w}_t} = (\widehat{w}_t^1, \widehat{w}_t^2, \dots \widehat{w}_t^t),\ \mathbf{f_t} = (f_t^1, f_t^2, \dots f_t^t)$
 \STATE\textbf{\textperiodcentered}~ True outcome $y_t$ is revealed
 \STATE\textbf{\textperiodcentered}~ Computation of master's loss $h_t = \lambda(p_t, y_t) $ and experts' losses: $l_t^i =
 \begin{cases}
@@ -197,7 +197,7 @@ representing the master's cumulative loss during the first T steps, we can defin
         h_t, & \text{if $i > t$}
 \end{cases}$
 \STATE\textbf{\textperiodcentered}~ \textbf{Loss Update} weights modification
-\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{-\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
+\[  \widetilde{w}_t^i = \dfrac{w_t^i e^{\eta l_t^i}}{\sum\limits_{j = 1}^t w_t^j e^{-\eta l_t^i} + e^{-\eta h_t} (1 - \sum\limits_{j = 1}^t w_t^j) } \]
 \STATE\textbf{\textperiodcentered}~ \textbf{Mixing Update} weights modification
 \[  \widetilde{w}_{t+1}^i = \alpha_t\widetilde{w}_1^i + (1 - \alpha_t)\widetilde{w}_t^i\] 
 
@@ -249,7 +249,7 @@ We then conduct experiments to analyze the effects of varying hyperparameters.
 We define generators $G_1, G_2, \dots, G_k$ by their weight vectors $\vec w_1, \vec w_2, \dots, \vec w_k \in \RR^d$. 
 Here, $d$ represents the dimensionality of the signals.
 
-We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_n \sim \mathcal{N}(0, I_d)$, indicating they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
+We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_T \sim \mathcal{N}(0, I_d)$, indicating they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
 
 This series of vectors is then randomly divided into a sequence of segments. 
 We denote these segments as $S_1, S_2, \dots, S_m$. 
@@ -257,31 +257,36 @@ Each segment $S_i$ is a sequence of vectors itself, containing elements from $\v
 Importantly, each segment $S_i$ is assigned to a specific generator $G_{g(i)}$ according to a random function $g$. 
 This function determines which generator is responsible for creating responses for that segment.
 
-Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_n$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i)}, \vec x_i \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, 1)$ 
+Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_T$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i)}, \vec x_i \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, \sigma^2)$ 
 
+\vspace{2mm}
+
+In our experiment, we fix the following data characteristics:
+\begin{itemize}
+\item Time series length $T = 2000$
+\item Signals dimention $d=10$
+\item Generator weight vectors are drawn from uniform distribution $U_{[-10, 10]^d}$
+\item Responses bounds $(a, b) = (-40, 40)$
+\item Segments sizes are drawn form uniform distribution $U_{[100, 400]}$
+\item Number of generators $k = 3$
+\item White noise variance $\sigma^2= 1$
+\end{itemize}
 \subsection{Experts}
 
-Each expert $f_t$ is initialized as a linear regression model. This model is trained on a fixed window of $l$ past observations. The training process yields a weight vector, which is calculated as  $\theta_t = (\vec X^T\vec X)^{-1}\vec X^T\vec y$,\ where $\vec X^T = (\vec x_{t-1}, \vec x_{t-2}, \dots \vec x_{t-l}),\ \vec y = (y_{t-1}, y_{t-2}, \dots y_{t-l})$. 
+Each expert $f_t$ is initialized as a linear regression model. 
+This model is trained on a fixed window of $l$ past observations. 
+The training process yields a weight vector, which is calculated as  
+$\theta_t = (\vec X^T\vec X)^{-1}\vec X^T\vec y$,\ where $\vec X^T = (\vec x_{t-1}, \vec x_{t-2}, \dots \vec x_{t-l}),\ \vec y = (y_{t-1}, y_{t-2}, \dots y_{t-l})$. 
 
 Given a new signal vector  $\vec x$, the expert's prediction is obtained by calculating the dot product between the weight vector and the signal vector: $f_t(\vec x) = \langle \vec \theta_t, \vec x \rangle$ 
 
-The <<ideal expert>> is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the ideal expert's predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment).
+The <<best partition >> is formed based on a hindsight analysis of the experiment results, assuming we know the segment boundaries. For each segment, the best partition predictions are set equal to the predictions of the best local expert (the one that has the lowest cumulative sum on that segment).
 \newpage
 
-\subsection{Fixed parameters}
-Signals dimention $d=10$
-
-Time series length $T = 2000$.
-
-Responses borders $(a, b) = (-10, 10)$
-
-Number of experts $w = 3$
-
-
-
-
 \subsection{Hyperparameters}
-We run algorithm with various hyperparameters. As a metric of quality we use master's regret relative to the <<ideal expert>>.
+
+
+We run algorithm with various hyperparameters. As a metric of quality we use master's regret relative to the best partition.
 
 \textbf{Initialization weights}
 
@@ -303,7 +308,8 @@ We run algorithm with various hyperparameters. As a metric of quality we use mas
 
 \hspace*{3mm} We vary window size to check algorithm performance in situations when experts lack information or when they often train on pieces made by different generators
 
-\section{Results}
+\subsection{Results}
+%\section{Results}
 
 
 

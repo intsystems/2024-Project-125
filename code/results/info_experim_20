@@ -1,0 +1,39 @@
+dir = '../results/'
+file = 'experim_20.json'
+
+seeds = np.arange(4) + 101
+
+params = Params(series_type = "default",
+                from_start = False,
+                a = -40,
+                b = 40,
+                dim = 10,
+                low = -10,
+                high = 10,
+                clip = (-40, 40),
+                workers_num = 5,
+                length = 20,
+                lower_bound = 1,
+                upper_bound = 3,
+                alternating=True)
+
+different_noises = [1]
+different_windows = [10]
+different_wf = ["default_d1", "default_d100", "const_d1", "const_d100", "diverge_05_d1", "diverge_05_d100", "simple_101_d1", "simple_101_d100"]
+different_af = []
+
+
+interesting = set()
+
+for key_w in different_wf:
+    interesting.add((key_w, "start", "default"))
+
+# for key_a in different_af:
+#     interesting.add(("simple_101", "start", key_a))
+
+
+experiments, df = run_experiments(dir+file, seeds, params, different_noises, different_windows, interesting)
+with open(dir + Path('info_' + file).with_suffix('').as_posix(), 'w') as f:
+    f.write(_ih[2])
+    
+# experiments, df = load_experiments(dir+file)

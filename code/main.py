@@ -1,10 +1,11 @@
 from experiment import run_experiments
+from experiment import load_experiments
 from experiment import Params
 import numpy as np
 
 filepath = 'results/experiment_main.json'
 
-seeds = 5 * np.arange(2, 5) + 111
+seeds = np.arange(4) + 101
 
 params = Params(series_type="default",
                 from_start=False,
@@ -14,23 +15,26 @@ params = Params(series_type="default",
                 low=-10,
                 high=10,
                 clip=(-40, 40),
-                workers_num=3,
+                workers_num=5,
                 length=2000,
-                lower_bound=100,
-                upper_bound=400,
+                lower_bound=50,
+                upper_bound=300,
                 alternating=True)
 
-different_noises = [5, 10, 20, 50, 100, 200]
-different_windows = [0.0001, 0.001, 0.1, 1, 10, 100]
-different_wf = ["default", "simple_101", "simple_2", "diverge_05", "const"]
-different_af = ["default", "simple_05", "simple_2", "exp"]
+different_noises = [1, 10]
+different_windows = [10, 20]
+
+different_wf = ["simple_101", "const", "diverge_05"]
+different_af = ["default", "simple_05", "simple_2", "shift_100"]
+mixing_types = ["start", "uniform past", "decaying past"]
 
 interesting = set()
 
-for key_w in different_wf:
-    interesting.add((key_w, "default"))
-
-for key_a in different_af:
-    interesting.add(("default", key_a))
+for mixing_type in mixing_types:
+    for key_a in different_af:
+        for key_w in different_wf:
+            interesting.add((key_w, mixing_type, key_a))
 
 experiments, df = run_experiments(filepath, seeds, params, different_noises, different_windows, interesting)
+
+# experiments, df = load_experiments(filepath)
