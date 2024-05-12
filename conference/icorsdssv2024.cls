@@ -11,8 +11,9 @@
 \RequirePackage[T2A]{fontenc}
 \RequirePackage{amsmath, amsfonts, amssymb, bm}
 \RequirePackage{graphicx}
+%\RequirePackage[letterpaper, left=3cm,right=3cm,top=3cm,bottom=3cm]{geometry}
+\RequirePackage[letterpaper, left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
 %\RequirePackage[letterpaper, left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
-\RequirePackage[letterpaper, left=3cm,right=3cm,top=3cm,bottom=3cm]{geometry}
 \RequirePackage{fancyhdr}
 \RequirePackage[makeindex]{imakeidx}
 
@@ -39,21 +40,27 @@
 % Abstract and keywords
 \def\@abstract{\normalsize\textbf{Abstract. }} \def\end@abstract{\par}
 \def\@mykeywords{\normalsize\textbf{Keywords. }} \def\end@mykeywords{\par}
+\def\@myudc{\normalsize{UDC: }} \def\end@myudc{\par}
 \newtoks\abstract
 \newtoks\mykeywords
+\newtoks\myudc
 \def\cleararticleinfo{\global\abstract={}}
 \def\cleararticleinfo{\global\mykeywords={}}
+\def\cleararticleinfo{\global\myudc={}}
 
 % Make title
 \newcommand{\mymaketitle}{
 \newsavebox{\foo}
 \savebox{\foo}{
-\begin{minipage}[t]{14.9cm}
-	% Title and authors
-	\begin{minipage}[c][4cm][c]{14.7cm}
+%\begin{minipage}[t]{14.9cm}
+%	% Title and authors
+%	\begin{minipage}[c][4cm][c]{14.7cm}
 %\begin{minipage}[t]{17.3cm}
 %	% Title and authors
 %	\begin{minipage}[c][4cm][c]{17.1cm}
+\begin{minipage}[t]{15.9cm}
+	% Title and authors
+	\begin{minipage}[c][4cm][c]{15.9cm}
 		\begin{center}
 		\Large\bfseries\@mytitle
 		\par\vspace{1em}
@@ -77,7 +84,9 @@
 	
 	\normalfont
 	\par\vspace{1em}
-	\normalsize{UDC:} 519.246 + 519.837
+	\begin{@myudc}\the\myudc\end{@myudc}
+	
+%	\normalsize{UDC:} 519.246 + 519.837
 	\par\noindent\rule{\textwidth}{.5pt}
 \end{minipage}}
 \par\noindent\usebox{\foo}\vspace{-0.25cm}}
@@ -85,7 +94,7 @@
 \setlength{\parskip}{\baselineskip}
 
 % Do not indent the 1st line of a paragraph.
-\setlength{\parindent}{0mm}
+%\setlength{\parindent}{0mm}
 
 % For making the biblipgraphy more compact
 %\renewcommand{\itemsep}{\skip0}

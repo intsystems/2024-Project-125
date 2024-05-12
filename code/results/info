@@ -22,13 +22,13 @@ iw, tw 22
 iw 24
 gm(<1) 25
 ns 27
-iw, af 32
+iw, af 32, 49, 51
 
 
 increasing:
 iw, tw 34
 iw, gm 30
-iw, af 38, 48
+iw, af 38, 48, 50
 iw 40
 ns 41
 
