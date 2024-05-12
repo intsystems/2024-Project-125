@@ -150,7 +150,7 @@ def run_experiments(filepath, seeds, params, different_noises, different_windows
                                 indexes=gen.indexes,
                                 stamps=gen.stamps,
                                 master_losses_all=algo.master_losses_all,
-                                ideal_losses=anl.best_partition_losses,
+                                ideal_losses=anl.ideal_losses,
                                 theoretical_upper=anl.theoretical_upper,
                                 )
 
@@ -239,7 +239,7 @@ def draw_logs(logs, show=None, title=None, fig_size=(15, 10)):
 
     if "ideal" in show:
         plt.plot(grid, logs.ideal_losses[logs.shift:].cumsum(),
-                 label="Ideal expert cumulative losses", color='green')
+                 label="Best partition cumulative losses", color='green')
 
     if "master" in show:
         plt.plot(grid, logs.master_losses_all[logs.shift:].cumsum(),

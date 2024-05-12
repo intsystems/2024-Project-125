@@ -196,22 +196,38 @@ class Algorithm(object):
         if self.mixing_type == "start":
             self.weights[1:self.total_time] = (alpha * self.weights1
                                                + (1 - alpha) * self.weights[1:self.total_time])
-        if self.mixing_type == "uniform past":
+        elif self.mixing_type == "uniform past":
             uniform_component = self.weights_all[:self.curr_time, 1:self.total_time].mean(axis=0)
             self.weights[1:self.total_time] = (alpha * uniform_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
-        if self.mixing_type.startswith("decaying past"):
-            if self.mixing_type == "decaying past":
-                gamma = 1
-            else:
-                gamma = float(self.mixing_type.removeprefix("decaying past-"))
+        else:
+            if self.mixing_type.startswith("decaying past"):
+                if self.mixing_type == "decaying past":
+                    gamma = 1
+                else:
+                    gamma = float(self.mixing_type.removeprefix("decaying past-"))
 
-            mixing = (self.curr_time - np.arange(self.curr_time)) ** gamma
-            mixing_weights = mixing / mixing.sum()
-            decaying_component = (mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=1)
-            self.weights[1:self.total_time] = (alpha * decaying_component
+                mixture = 1 / (self.curr_time - np.arange(self.curr_time)) ** gamma
+
+            if self.mixing_type.startswith("increasing past"):
+                if self.mixing_type == "increasing past":
+                    gamma = 1
+                else:
+                    gamma = float(self.mixing_type.removeprefix("increasing past-"))
+                mixture = (self.curr_time - np.arange(self.curr_time)) ** gamma
+
+            if self.mixing_type.startswith("progressing past"):
+                if self.mixing_type == "progressing past":
+                    gamma = 1
+                else:
+                    gamma = float(self.mixing_type.removeprefix("progressing past-"))
+
+                mixture = np.arange(1, self.curr_time + 1) ** gamma
+
+            mixing_weights = mixture / mixture.sum()
+            past_component = (mixing_weights * self.weights_all[:self.curr_time, 1:self.total_time].T).sum(axis=1)
+            self.weights[1:self.total_time] = (alpha * past_component
                                                + (1 - alpha) * self.weights[1:self.total_time])
-
 
     def receive_signal(self):
         """

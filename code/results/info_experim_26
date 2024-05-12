@@ -26,7 +26,7 @@ different_af = []
 interesting = set()
 
 for key_w in different_wf:
-    interesting.add((key_w, "uniformal past", "default"))
+    interesting.add((key_w, "uniform past", "default"))
 
 
 experiments, df = run_experiments(dir+file, seeds, params, different_noises, different_windows, interesting)

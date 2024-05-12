@@ -1,0 +1,38 @@
+dir = '../results/'
+file = 'experim_35.json'
+
+seeds = np.arange(4) + 101
+
+params = Params(series_type = "default",
+                from_start = False,
+                a = -40,
+                b = 40,
+                dim = 10,
+                low = -10,
+                high = 10,
+                clip = (-40, 40),
+                workers_num = 5,
+                length = 2000,
+                lower_bound = 50,
+                upper_bound = 300,
+                alternating=True)
+
+different_noises = [8, 15]
+different_windows = [10]
+different_wf = ["simple_101"]
+mixing_types = ["uniform past", "decaying past", "increasing past"]
+different_af = []
+
+
+interesting = set()
+
+for key_w in different_wf:
+    for mt in mixing_types:
+        interesting.add((key_w, mt, "default"))
+
+
+experiments, df = run_experiments(dir+file, seeds, params, different_noises, different_windows, interesting)
+with open(dir + Path('info_' + file).with_suffix('').as_posix(), 'w') as f:
+    f.write(_ih[2])
+    
+# experiments, df = load_experiments(dir+file)

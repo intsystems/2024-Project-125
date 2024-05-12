@@ -204,6 +204,14 @@ def alpha_func_const_15000(x):
     return 1 / 5000
 
 
+def alpha_func_const_110000(x):
+    return 1 / 10000
+
+
+def alpha_func_const_150000(x):
+    return 1 / 50000
+
+
 def default_alpha_func(x):
     return 1 / (x + 1)
 
@@ -276,6 +284,8 @@ alpha_hypers = {
     "const_1500": AlphaHyper(alpha_func_const_1500, "1 / 500"),
     "const_11000": AlphaHyper(alpha_func_const_11000, "1 / 1000"),
     "const_15000": AlphaHyper(alpha_func_const_15000, "1 / 5000"),
+    "const_110000": AlphaHyper(alpha_func_const_110000, "1 / 10000"),
+    "const_150000": AlphaHyper(alpha_func_const_150000, "1 / 50000"),
     "simple_01": AlphaHyper(alpha_func_01, "1 / (x + 1)^0.1"),
     "simple_05": AlphaHyper(alpha_func_05, "1 / (x + 1)^0.5"),
     "simple_11": AlphaHyper(alpha_func_11, "1 / (x + 1)^1.1"),

@@ -59,7 +59,7 @@
 \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
 \RequirePackage{makeidx}
 \RequirePackage{pb-diagram}
-\RequirePackage{subfig}
+\RequirePackage{subcaption}
 %% Двухколоночный набор:
 %\RequirePackage{balance}  %% неверно обрабатываются сноски на балансируемой странице
 \newcommand{\balance}{\relax}
@@ -71,7 +71,10 @@
 
 \renewcommand{\baselinestretch}{1}
 
-\renewcommand{\thesubfigure}{\textit{\asbuk{subfigure}}}
+%\renewcommand{\thesubfigure}{\Alph{figure}}
+%\renewcommand{\thefigure}{}
+\captionsetup[subfigure]{labelformat=empty}
+%\renewcommand{\thesubfigure}{\textit{\asbuk{subfigure}}}
 
 % Для A5
 %\textheight=175mm

@@ -1,0 +1,39 @@
+20 - dull constant
+35, 46 - common ns
+47 - common tw
+
+start:
+iw, tw 10-13
+ns 14-16
+af 17-19
+af 29
+ns 43, 45, 46
+
+uniform:
+iw, tw 21
+iw 23
+ns 26
+iw, af 31
+iw, af 33
+iw, af 37
+
+decaying:
+iw, tw 22
+iw 24
+gm(<1) 25
+ns 27
+iw, af 32
+
+
+increasing:
+iw, tw 34
+iw, gm 30
+iw, af 38, 48
+iw 40
+ns 41
+
+progressing:
+iw, gm(>=1) 28
+iw, gm(<1) 36
+iw, af 38
+

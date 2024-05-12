@@ -18,7 +18,7 @@ class Analysis(object):
         
         self.segments_losses = np.full((self.pieces_num, self.total_time), np.inf)
         self.best_partition = np.zeros(self.pieces_num)
-        self.best_partition_losses = np.zeros(self.total_time)
+        self.ideal_losses = np.zeros(self.total_time)
         self.zero_losses = np.zeros(self.total_time)
 
         self.theoretical_upper = np.zeros(self.algo.total_time)
@@ -40,11 +40,11 @@ class Analysis(object):
                 self.stamps,
                 self.stamps[1:]
         ):
-            # self.best_partition_losses[left:right] = self.algo.experts_losses_all[left:right, self.best_partition[seg_num]]
+            # self.ideal_losses[left:right] = self.algo.experts_losses_all[left:right, self.best_partition[seg_num]]
             if seg_num < self.workers_num:
-                self.best_partition_losses[left:right] = self.algo.master_losses_all[left:right]
+                self.ideal_losses[left:right] = self.algo.master_losses_all[left:right]
             else:
-                self.best_partition_losses[left:right] = self.algo.experts_losses_all[left:right, self.best_partition[seg_num]]
+                self.ideal_losses[left:right] = self.algo.experts_losses_all[left:right, self.best_partition[seg_num]]
     
     def count_theoretical_upper(self):
         k = 0
@@ -55,7 +55,7 @@ class Analysis(object):
             for t in np.arange(left, right):
                 self.theoretical_upper[t] = self.theoretical_upper_func(k, t - self.shift)
     
-        self.theoretical_upper[self.shift:] += self.best_partition_losses[self.shift:].cumsum()
+        self.theoretical_upper[self.shift:] += self.ideal_losses[self.shift:].cumsum()
     
     
     def post_calculations(self, from_start=True):
@@ -65,7 +65,7 @@ class Analysis(object):
         self.count_segments_losses()
         self.count_theoretical_upper()
         self.zero_losses = self.algo.loss_func(self.algo.responses, 0)
-        self.regret = self.algo.master_losses_all[self.shift:].sum() - self.best_partition_losses[self.shift:].sum()
+        self.regret = self.algo.master_losses_all[self.shift:].sum() - self.ideal_losses[self.shift:].sum()
     
     
     def draw_all(self, from_start=True, show=None, show_experts=None,
@@ -122,7 +122,7 @@ class Analysis(object):
             text_idx = idx
     
             if "best" in show:
-                ax[idx].plot(grid, self.best_partition_losses[shift:], label="Best partition losses",
+                ax[idx].plot(grid, self.ideal_losses[shift:], label="Best partition losses",
                              color='green')
             if "zero" in show:
                 ax[idx].plot(grid, self.zero_losses[shift:],
@@ -145,7 +145,7 @@ class Analysis(object):
             idx = show_axes.index("regret")
     
             if "best" in show:
-                ax[idx].plot(grid, self.best_partition_losses[shift:].cumsum(),
+                ax[idx].plot(grid, self.ideal_losses[shift:].cumsum(),
                              label="Best partition cumulative losses", color='green')
             if "zero" in show:
                 ax[idx].plot(grid, self.zero_losses[shift:].cumsum(),
@@ -227,7 +227,7 @@ def draw_several(from_start=True, logs=None, labels=None, colors=None,
     for gen_idx, gen_stamp in zip(np.r_[logs[0].indexes, -1], logs[0].stamps):
         if gen_stamp < shift:
             continue
-        plt.axvline(gen_stamp - shift, color='orange', linestyle=':')
+        plt.axvline(gen_stamp - shift, color='orange', linestyle=':', lw=1)
         if gen_idx != -1:
             plt.text(x=gen_stamp - shift + 0.005 * (right - left), y=top - 0.12 * (top - bottom),
                               s=f"gen {gen_idx}", color='orange', rotation=15)
@@ -236,3 +236,15 @@ def draw_several(from_start=True, logs=None, labels=None, colors=None,
     if save_path is not None:
         plt.savefig(save_path)
     plt.show()
+
+
+def extract_needed(experiments, needed):
+    vital = []
+    for experiment in experiments:
+        take = True
+        for key in needed.keys():
+            if getattr(experiment, key) not in needed[key]:
+                take = False
+        if take:
+            vital.append(experiment)
+    return vital
