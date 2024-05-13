@@ -6,7 +6,7 @@ start:
 iw, tw 10-13
 ns 14-16
 af 17-19
-af 29
+af 29, 52
 ns 43, 45, 46
 
 uniform:

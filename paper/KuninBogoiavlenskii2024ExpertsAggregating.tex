@@ -10,6 +10,7 @@
 %\usepackage{slashbox}
 \usepackage{diagbox}
 
+\usepackage{varwidth}
 %\usepackage[figuresright]{rotating}
 \usepackage[figuresleft]{rotating}
 \usepackage{tabularx}
@@ -21,6 +22,9 @@
 \raggedbottom
 \usepackage{float}
 
+%\usepackage{caption}
+%\captionsetup{justification=justified}
+\usepackage{boxhandler}
 
 \usepackage{algorithm}
 \usepackage{lipsum}
@@ -355,56 +359,59 @@ We also propose a new mixing scheme:
 As a metric of quality we use $R_T$ --- master's regret relative to the best partition.
 We run experiments 4 times for each configuration of hyperparameters, and take the mean of the earned regrets.
 
+\newpage
 \section{Results}
 
 We analyze the impact of various hyperparameters on the GMPP algorithm's performance, focusing on initialization weights, mixing schemes, mixing update coefficients, and expert window size. Our primary performance metric is the mean regret relative to the best partition, calculated from four independent runs for each hyperparameter configuration.
 
 \subsection{Influence of Noise}
-
-
 \begin{figure}[htb]
     \centering % <-- added
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_0.1}
   \caption{$\sigma^2$ = 0.1}
-  \label{fig:1}
+  \label{fig:n_1}
 \end{subfigure}\hfil % <-- added
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_2}
   \caption{$\sigma^2$ = 2}
-  \label{fig:2}
+  \label{fig:n_2}
 \end{subfigure}\hfil % <-- added
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_5}
   \caption{$\sigma^2$ = 5}
-  \label{fig:3}
+  \label{fig:n_5}
 \end{subfigure}
 
 \medskip
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_10}
   \caption{$\sigma^2$ = 10}
-  \label{fig:4}
+  \label{fig:n_10}
 \end{subfigure}\hfil % <-- added
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_15}
   \caption{$\sigma^2$ = 15}
-  \label{fig:5}
+  \label{fig:n_15}
 \end{subfigure}\hfil % <-- added
 \begin{subfigure}{0.33\textwidth}
   \includegraphics[width=\linewidth]{noise_20}
   \caption{$\sigma^2$ = 20}
-  \label{fig:6}
+  \label{fig:n_20}
 \end{subfigure}
-\caption{Total losses for different noise variance $\sigma^2$}
-\label{fig:images}
+
+\caption{\begin{varwidth}[t]{\linewidth}\centering Total losses with different noise variance $\sigma^2$  \\ (alpha function is defaut, weight function is $1/x^{1.01}$, window size = 10)\end{varwidth}}
+
+%\caption{Total losses for different noise variance $\sigma^2$}
+\label{fig:noises}
 \end{figure}
 
 
 
 \begin{table}[H]
 \centering
-\caption{Regret for different Mixing Update schemes and Noise}
+%\caption{Regret for different Mixing Update schemes and Noise}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different Mixing Update schemes and Noise  \\ (alpha function is defaut, weight function is $1/x^{1.01}$, window size = 10)\end{varwidth}}
 \label{tab:alpha}
 
 \begin{tabular}{c|ccccc}
@@ -448,14 +455,48 @@ We analyze the impact of various hyperparameters on the GMPP algorithm's perform
 \end{tabular}
 \end{table}
 
+\newpage
 
 \subsection{Influence of Training Window Size}
+
+\begin{figure}[htb]
+    \centering % <-- added
+\begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\linewidth]{diff_tw_s}
+  \caption{Start Vector Share}
+  \label{fig:tw_s}
+\end{subfigure}\hfil % <-- added
+\begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\linewidth]{diff_tw_i}
+  \caption{Increasing Past Share}
+  \label{fig:tw_i}
+\end{subfigure}\hfil % <-- added
+
+
+\medskip
+\begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\linewidth]{diff_tw_u}
+  \caption{Uniform Past Share}
+  \label{fig:tw_u}
+\end{subfigure}\hfil % <-- added
+\begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\linewidth]{diff_tw_d}
+  \caption{Decaying Past Share}
+  \label{fig:tw_d}
+\end{subfigure}\hfil % <-- added
+
+%\caption{Total losses for different sizes of train window}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Total losses with different sizes of train window  \\ (alpha function is defaut, weight function is $1/x^{1.01}$, $\sigma^2 =1$)\end{varwidth}}
+
+\label{fig:imag}
+\end{figure}
 
 
 \begin{table}[h]
 \centering
-\caption{Mean values for different Mixing Update schemes and Train Windows}
-\label{tab:mean_values}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different Mixing Update schemes and Train Windows  \\ (alpha function is defaut, weight function is $1/x^{1.01}$, $\sigma^2 =1$)\end{varwidth}}
+%\caption{\begin{varwidth}[t]{\linewidth}Lower, upper and simulation \\ throughput per user \textit{vs.}\ number of users\end{varwidth}}
+%\label{tab:mean_values}
 
 \begin{tabular}{c|ccccc}
 \toprule
@@ -473,61 +514,31 @@ We analyze the impact of various hyperparameters on the GMPP algorithm's perform
 \end{table}
 
 
-
-\subsection{Gamma parameter in  Increasing Mixing Update}
-
-\begin{table}[h]
-\centering
-\caption{Regret value for different $\gamma$ in Increasing Mixing Update scheme}
-\begin{tabular}{r|ccccc}
-\toprule
- & \multicolumn{4}{c}{Weight function} \\
-\toprule
-{$\gamma$} &
-\centering $\dfrac{1}{t^{1.01}}$ &
-\centering $\dfrac{1}{t^{0.5}}$ &
-\centering $\dfrac{1}{c}$ &
-\centering $\dfrac{1}{{(x+1)\cdot(\ln(x+1))^{2}}}$ \tabularnewline
-\midrule
-$0.5$ & 110151.26 & 112279.88 & 118155.78 & 119783.90 \\
-$1$ & 110438.09 & 111221.38 & 117241.85 & 122383.91 \\
-$2$ & 111563.64 & 110089.54 & 116216.44 & 126865.67 \\
-$4$ & 113922.30 & 109160.56 & 115299.68 & 133447.69 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-
-
-\begin{figure}[htb]
-\centering % <-- added
-\includegraphics[width=1\linewidth]{diff_wf}
-\caption{Total loss for different weight functions}
-\end{figure}
-
-
-\begin{figure}[htb]
-\centering % <-- added
-\includegraphics[width=1\linewidth]{diff_mt}
-\caption{Total loss for different mixing schemes}
-\medskip
-\end{figure}
-
+\newpage
 %\begin{figure}[htb]
 \subsection{Impact of Initialization Weights}
+
+\begin{figure}[htb]
+\centering % <-- added
+\includegraphics[width=0.9\linewidth]{diff_wf}
+%\caption{Total loss for different weight functions}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Total loss for different weight functions \\(alpha function is defaut, $\sigma^2 =1$, window size = 10)\end{varwidth}}
+
+
+\end{figure}
 
 
 \begin{table}[H]
 \centering
-\caption{Mean values for different weight functions and mixing types}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different weight functions and mixing types  \\(alpha function is defaut, $\sigma^2 =1$, window size = 10)\end{varwidth}}
+%\caption{Regret with different weight functions and mixing types}
 \label{tab:mean_values_b}
 
 \begin{tabular}{c|cccc}
 \toprule
-Weight Function & \multicolumn{4}{c}{Mixing Type} \\
+ & \multicolumn{4}{c}{Mixing Type} \\
 \midrule
-& Decaying Past & Increasing Past & Start & Uniform Past \\
+Weight Function & Decaying Past & Increasing Past & Start & Uniform Past \\
 \midrule
 $1 / ((x + 1)\ln^2(x + 1))$ & 122513.26 & 122383.91 & 175594.64 & 117175.93 \\
 $1 / c$ & 128114.78 & 117241.85 & 113998.26 & 119703.68 \\
@@ -543,151 +554,124 @@ $1 / (x^{1.2})$ & 124846.17 & 111873.03 & 137976.99 & 112298.14 \\
 $1 / (x^2)$ & 133051.62 & 124473.63 & 148080.01 & 123449.14 \\
 $1 / ((x + 4) \ln(x + 4)\ln^2(\ln(x + 4)))$ & 121229.77 & 119413.95 & 169065.24 & 114823.76 \\
 
-
-
 \bottomrule
 \end{tabular}
 \end{table}
 
 
 
-\subsection{Mixing Update Coefficients Analysis}
+\subsection{Impact of Mixing Update Coefficients}
+
 
 \begin{table}[H]
 \centering
-\caption{Regret for different alpha functions (Start Vector Share, $\sigma^2=1$)}
-\label{tab:alpha}
-\begin{tabular}{cc}
+%\caption{Regret with different Alpha and Weight Functions in Start Vector Share Update scheme}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different Alpha and Weight Functions in Start Vector Share Update scheme  \\($\sigma^2 =1$, window size = 10)\end{varwidth}}
+\begin{tabular}{r|cccc}
 \toprule
-Alpha function & Mean Regret \\
+ & \multicolumn{4}{c}{Weight function} \\
+\toprule
+{Alpha function} &
+\centering $\dfrac{1}{{(x+1)\ln^2(x+1)}}$ &
+\centering $\dfrac{1}{t^{1.01}}$ &
+\centering $\dfrac{1}{t^{0.5}}$ &
+\centering $\dfrac{1}{c}$ 
+\tabularnewline
 \midrule
-$1 / (x + 1)$ & 132268.3 \\
-$1 / (x + 1)^{0.5}$ & 207099.32 \\
-$1 / (x + 1)^{1.5}$ & 125699.71 \\
-$1 / (x + 1)^2)$ & 134929.54 \\
-$1 / e^{x/3}$ & 135409.06 \\
-$1 / (x + 10)$ & 132208.09 \\
-$1 / (x + 100)$ & 131623.56 \\
-$1 / (x + 1000)$ & 127165.47 \\
-$1 / 100$ & 163117.4 \\
-$1 / 500$ & 141385.79 \\
-$1 / 1000$ & 135612.25 \\
-$1 / 5000$ & 121905.5 \\
-$1 / 10000$ & 119357.81 \\
-$1 / 50000$ & 125141.06 \\
+$1 / (x + 1)$ & 175594.64 & 132268.30 & 108630.68 & 113998.26 \\
+$1 / (x + 1)^{0.5}$ & 245494.10 & 207099.32 & 164079.31 & 141554.07 \\
+$1 / (x + 1)^{1.5}$ & 130339.21 & 125699.71 & 130185.66 & 131329.66 \\
+$1 / (x + 1)^2$ & 136029.09 & 134929.54 & 133876.06 & 132709.43 \\
+$1 / e^{x/3}$ & 136413.87 & 135409.06 & 134012.15 & 132760.88 \\
+$1 / (x + 10)$ & 175411.17 & 132208.09 & 108638.55 & 114051.47 \\
+$1 / (x + 100)$ & 173760.98 & 131623.56 & 108732.56 & 114568.90 \\
+$1 / (x + 1000)$ & 162129.20 & 127165.47 & 110389.16 & 118512.52 \\
+$1 / 100$ & 220008.81 & 163117.40 & 129035.87 & 117521.60 \\
+$1 / 500$ & 198094.83 & 141385.79 & 111706.58 & 108969.41 \\
+$1 / 1000$ & 184324.73 & 135612.25 & 109449.15 & 111709.95 \\
+$1 / 5000$ & 147561.46 & 121905.50 & 115147.43 & 123741.66 \\
+$1 / 10000$ & 136414.42 & 119357.81 & 120634.74 & 127510.93 \\
+$1 / 50000$ & 130783.65 & 125141.06 & 129963.25 & 131542.49 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 
-
-
-
-
+\subsection{Gamma parameter in  Increasing Past Mixing Update}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{r|ccc}
- &
-\multicolumn{2}{c}{Weight function} \\
-\toprule {Window size}  &
-
-\centering $\dfrac{1}{(t+1)\ln^2(t+1)}$ &
-\centering $\dfrac1{t^{1.01}}$  & \tabularnewline
-
+\captionsetup{justification=centering}
+%\caption{Regret value for different $\gamma$ in Increasing Past Share Mixing Update scheme }
+\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different $\gamma$ in Increasing Past Share Mixing Update scheme  \\(alpha function is defaut, $\sigma^2 =1$, window size = 10)\end{varwidth}}
+\begin{tabular}{r|cccc}
+\toprule
+ & \multicolumn{4}{c}{Weight function} \\
+\toprule
+{$\gamma$} &
+\centering $\dfrac{1}{{(x+1)\ln^2(x+1)}}$ &
+\centering $\dfrac{1}{t^{1.01}}$ &
+\centering $\dfrac{1}{t^{0.5}}$ &
+\centering $\dfrac{1}{c}$ 
+\tabularnewline
 \midrule
-5 &  188586.09 & 141788.84 \\ %& 113612.93 \\
-10 &  136360.61 &\ 94758.81 \\ %&\ 83776.19 \\
-20 &  129543.68 &\ 93456.18 \\ %& 114114.46 \\
-50 &  143610.19 &\ 97600.05 \\ %& 123485.38 \\
-100 & 151434.18 & 101551.31 \\ %& 126436.54 \\
-200 & 164746.91 & 113835.86 \\ %& 137111.18 \\
+
+$0.5$& 119783.90 & 112279.88 & 118155.78 & 110151.26 \\
+$1$ & 122383.91 & 111221.38 & 117241.85 & 110438.09 \\
+$2$& 126865.67 & 110089.54 & 116216.44 & 111563.64 \\
+$4$ & 133447.69 & 109160.56 & 115299.68 & 113922.30 \\
 \bottomrule
 \end{tabular}
-\caption{Dinamics of regret value over different sizes of train window} \hspace{16cm}
-
 \end{table}
 
 
+\newpage
+
+\begin{figure}[htb]
+\centering % <-- added
+\includegraphics[width=1\linewidth]{diff_mt}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Total loss with different mixing schemes  \\ (alpha function is defaut, weight function is $1/x^{1.01}$, $\sigma^2 =1$, window size = 10)\end{varwidth}}
+%\caption{Total loss for different mixing schemes}
+\medskip
+\end{figure}
 
 
-
-\begin{sidewaystable}
- \centering
-\caption{Mean values for different Mixing Update schemes and Weight and Alpha functions}
-\label{tab:mean_values}
-
-\begin{tabular}{c|ccc|ccc|ccc|cccc}
-\toprule
-Mixing scheme & \multicolumn{3}{c|}{decaying past} & \multicolumn{3}{c|}{increasing past} & \multicolumn{3}{c|}{start} & \multicolumn{3}{c}{uniform past} \\
-\midrule
-\backslashbox{$\alpha_i$}{$w_1^i$} &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
-$\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ & 
-$\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
-$\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
-$\dfrac{1}{c}$ \\
-\midrule
-
-$1 / (x + 1)^{1.5}$ & 134772.88 & 133653.10 & 132550.84 & 131002.46 & 131849.84 & 131691.01 & 125699.71 & 130185.66 & 131329.66 & 132418.35 & 132462.74 & 131940.35 \\
-$1 / (x + 1)^2$ & 135387.37 & 133999.80 & 132753.35 & 135243.12 & 133935.92 & 132721.89 & 134929.54 & 133876.06 & 132709.43 & 135301.37 & 133958.00 & 132731.09 \\
-$1 / \ln(x + 1)$ & 283210.46 & 252792.84 & 236401.91 & 400131.46 & 337777.06 & 312108.84 & 418163.13 & 340332.19 & 309671.68 & 390906.14 & 333528.48 & 309569.53 \\
-$1 / e^{x/3}$ & 135409.03 & 134012.15 & 132760.88 & 135409.05 & 134012.15 & 132760.88 & 135409.06 & 134012.15 & 132760.88 & 135409.04 & 134012.15 & 132760.88 \\
-$1 / (x + 10)$ & 123137.39 & 126238.17 & 128145.72 & 110259.12 & 111266.42 & 117298.84 & 132208.09 & 108638.55 & 114051.47 & 110521.38 & 114212.49 & 119758.30 \\
-$1 / (x + 100)$ & 123716.13 & 126653.44 & 128428.77 & 109743.66 & 111718.80 & 117835.07 & 131623.56 & 108732.56 & 114568.90 & 110604.17 & 114760.01 & 120269.13 \\
-$1 / (x + 1000)$ & 127161.18 & 129057.11 & 129996.30 & 110754.21 & 115361.58 & 121521.83 & 127165.47 & 110389.16 & 118512.52 & 113447.62 & 118679.47 & 123629.94 \\
-$1 / 100$ & 116458.51 & 119146.90 & 121009.27 & 129873.90 & 125704.17 & 120981.15 & 163117.40 & 129035.87 & 117521.60 & 126579.65 & 125443.80 & 122193.55 \\
-$1 / 500$ & 115819.57 & 120327.13 & 124078.27 & 112133.96 & 110618.04 & 112210.02 & 141385.79 & 111706.58 & 108969.41 & 110553.23 & 111701.01 & 114376.80 \\
-$1 / 1000$ & 120757.50 & 124499.69 & 127207.59 & 109844.21 & 110794.06 & 115281.22 & 135612.25 & 109449.15 & 111709.95 & 109804.61 & 113087.31 & 117809.05 \\
-$1 / 5000$ & 130666.00 & 131268.42 & 131337.28 & 115333.89 & 121026.84 & 125928.09 & 121905.50 & 115147.43 & 123741.66 & 119177.49 & 123913.36 & 127377.46 \\
-$1 / 10000$ & 132825.98 & 132555.11 & 132022.41 & 121016.20 & 125808.32 & 128881.01 & 119357.81 & 120634.74 & 127510.93 & 124693.53 & 127919.40 & 129766.19 \\
-$1 / 50000$ & 134850.61 & 133704.96 & 132608.56 & 130965.08 & 131894.79 & 131885.46 & 125141.06 & 129963.25 & 131542.49 & 132477.77 & 132530.84 & 132100.09 \\
-\bottomrule
-\end{tabular}
-\end{sidewaystable}
-
-
-
+\newpage
 
 \begin{sidewaystable}
 \centering
-\caption{Mean values for different Mixing Update schemes and Weight and Alpha functions}
+\caption{\begin{varwidth}[t]{\linewidth}\centering Mean values with different Mixing Update schemes and Weight and Alpha functions  \\($\sigma^2 =1$, window size = 10)\end{varwidth}}
 \label{tab:mean_values}
+
 \begin{tabular}{c|ccc|ccc|ccc|cccc}
 \toprule
 Mixing scheme & \multicolumn{3}{c|}{start} & \multicolumn{3}{c|}{increasing past} & \multicolumn{3}{c|}{uniform past} & \multicolumn{3}{c}{decaying past} \\
 \midrule
 \backslashbox{$\alpha_i$}{$w_1^i$} &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
+$\dfrac{1}{x^{1.1}}$ &
+$\dfrac{1}{x^{0.5}}$ &
 $\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
+$\dfrac{1}{x^{1.1}}$ &
+$\dfrac{1}{x^{0.5}}$ & 
 $\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
+$\dfrac{1}{x^{1.1}}$ &
+$\dfrac{1}{x^{0.5}}$ &
 $\dfrac{1}{c}$ &
-$\dfrac{1}{t^{1.01}}$ &
-$\dfrac{1}{t^{0.5}}$ &
+$\dfrac{1}{x^{1.1}}$ &
+$\dfrac{1}{x^{0.5}}$ &
 $\dfrac{1}{c}$ \\
 \midrule
-$1 / (x + 1)^{1.5}$ & 125699 & 130185 & 131329 & 131002 & 131849 & 131691 & 132418 & 132462 & 131940 & 134772 & 133653 & 132550 \\
-$1 / (x + 1)^2$ & 134929 & 133876 & 132709 & 135243 & 133935 & 132721 & 135301 & 133958 & 132731 & 135387 & 133999 & 132753 \\
-$1 / \ln(x + 1)$ & 418163 & 340332 & 309671 & 400131 & 337777 & 312108 & 390906 & 333528 & 309569 & 283210 & 252792 & 236401 \\
-$1 / e^{x/3}$ & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 \\
-$1 / (x + 10)$ & 132208 & 108638 & 114051 & 110259 & 111266 & 117298 & 110521 & 114212 & 119758 & 123137 & 126238 & 128145 \\
-$1 / (x + 100)$ & 131623 & 108732 & 114568 & 109743 & 111718 & 117835 & 110604 & 114760 & 120269 & 123716 & 126653 & 128428 \\
-$1 / (x + 1000)$ & 127165 & 110389 & 118512 & 110754 & 115361 & 121521 & 113447 & 118679 & 123629 & 127161 & 129057 & 12999 \\
+
+$1 / (t + 1)^{1.5}$ & 125699 & 130185 & 131329 & 131002 & 131849 & 131691 & 132418 & 132462 & 131940 & 134772 & 133653 & 132550 \\
+$1 / (t + 1)^2$ & 134929 & 133876 & 132709 & 135243 & 133935 & 132721 & 135301 & 133958 & 132731 & 135387 & 133999 & 132753 \\
+$1 / \ln(t + 1)$ & 418163 & 340332 & 309671 & 400131 & 337777 & 312108 & 390906 & 333528 & 309569 & 283210 & 252792 & 236401 \\
+$1 / e^{t/3}$ & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 & 135409 & 134012 & 132760 \\
+$1 / (t + 10)$ & 132208 & \contour{black}{108638} & 114051 & 110259 & 111266 & 117298 & 110521 & 114212 & 119758 & 123137 & 126238 & 128145 \\
+$1 / (t + 100)$ & 131623 & \contour{black}{108732} & 114568 & \contour{black}{109743} & 111718 & 117835 & 110604 & 114760 & 120269 & 123716 & 126653 & 128428 \\
+$1 / (t + 1000)$ & 127165 & 110389 & 118512 & 110754 & 115361 & 121521 & 113447 & 118679 & 123629 & 127161 & 129057 & 129996 \\
 $1 / 100$ & 163117 & 129035 & 117521 & 129873 & 125704 & 120981 & 126579 & 125443 & 122193 & 116458 & 119146 & 121009 \\
-$1 / 500$ & 141385 & 111706 & 108969 & 112133 & 110618 & 112210 & 110553 & 111701 & 114376 & 115819 & 120327 & 124078 \\
-$1 / 1000$ & 135612 & 109449 & 111709 & 109844 & 110794 & 115281 & 109804 & 113087 & 117809 & 120757 & 124499 & 127207 \\
+$1 / 500$ & 141385 & 111706 & \contour{black}{108969} & 112133 & 110618 & 112210 & 110553 & 111701 & 114376 & 115819 & 120327 & 124078 \\
+$1 / 1000$ & 135612 & \contour{black}{109449} & 111709 & \contour{black}{109844} & 110794 & 115281 & \contour{black}{109804} & 113087 & 117809 & 120757 & 124499 & 127207 \\
 $1 / 5000$ & 121905 & 115147 & 123741 & 115333 & 121026 & 125928 & 119177 & 123913 & 127377 & 130666 & 131268 & 131337 \\
 $1 / 10000$ & 119357 & 120634 & 127510 & 121016 & 125808 & 128881 & 124693 & 127919 & 129766 & 132825 & 132555 & 132022 \\
 $1 / 50000$ & 125141 & 129963 & 131542 & 130965 & 131894 & 131885 & 132477 & 132530 & 132100 & 134850 & 133704 & 132608 \\
@@ -695,56 +679,6 @@ $1 / 50000$ & 125141 & 129963 & 131542 & 130965 & 131894 & 131885 & 132477 & 132
 \end{tabular}
 \end{sidewaystable}
 
-
-%\subsubsection{Training Window Size Optimization}
-%
-%\begin{table}[H]
-%\centering
-%\caption{Mean regret for different training window sizes ($\sigma^2=1$)}
-%\label{tab:window}
-%\begin{tabular}{cc}
-%\toprule
-%Window size & Mean Regret \\
-%\midrule
-%5 & 175594.64 \\
-%10 & 132268.3 \\
-%20 & 174345.5 \\
-%50 & 198797.48 \\
-%100 & 215346.38 \\
-%\bottomrule
-%\end{tabular}
-%\end{table}
-%
-%\begin{figure}[h]
-%\begin{minipage}[t]{0.4\textwidth}
-%
-%\centering
-%
-%\begin{tabular}{cc}
-%\toprule
-%Alpha function & regret \\
-%\midrule
-%$1 / (x + 1)$ &\ 94758.81 \\
-%$1 / (x + 1)^{0.5}$ & 149472.52 \\
-%$1 / (x + 1)^{1.5}$ &\ 92351.58 \\
-%$1 / (x + 1)^2)$ &\ 99120.36 \\
-%$1 / e^{x/3}$ &\ 99477.13 \\
-%$1 / (x + 10)$ &\ 94729.22 \\
-%$1 / (x + 100)$ &\ 94441.30 \\
-%$1 / (x + 1000)$ &\ 92194.36 \\
-%\bottomrule
-%\end{tabular}
-%
-%\caption{Regret value for different alpha functions} \hspace{16cm}
-%
-%\end{minipage}
-%\hfill
-%\begin{minipage}[t]{0.6\textwidth}
-%% Image code goes here
-%\includegraphics[width=0.7\linewidth]{fig_52}
-%\caption{Comparison of algorithm performance for different mixing schemes}
-%\end{minipage}
-%\end{figure}
 
 
 %
@@ -768,7 +702,7 @@ $1 / 50000$ & 125141 & 129963 & 131542 & 130965 & 131894 & 131885 & 132477 & 132
 
 %%%% please specify doi of the cited item if possible, see~\bibitem{article}
 %%%% Crossref doi of the item can be retrieved at http://www.crossref.org/guestquery/
-\newpage
+\clearpage
 \begin{thebibliography}{99}
 
 \bibitem{book}
