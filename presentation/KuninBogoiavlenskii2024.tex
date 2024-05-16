@@ -119,8 +119,8 @@ It is assumed that there are multiple generators, whose structure is unknown to 
 
 \item $L^i_T = \sum\limits_{t = 1}^T l^i_t$ --- cumulative loss of expert $i$ during the first T steps \\
 \item $H_T = \sum\limits_{t = 1}^T h_t$ --- master's cumulative loss during the first T steps \\
-\item $R^i_T = H_T - L^i_T$ --- master's regret relative to the expert $i$ \\
-
+%\item $R^i_T = H_T - L^i_T$ --- master's regret relative to the expert $i$ \\
+\item $R_T= H_T - L_T$ --- master's regret relative to the best partition, where $L_T$ is the cumulative loss of the best partition. 
 \end{itemize}
 
 
@@ -167,28 +167,51 @@ ENDFOR
 
 \begin{frame}
 \frametitle{Experiments}
+
+Metric --- $R_T$,  the regret
 \begin{block}{Initialization weights}
 Default weights: $w_1^i = \frac{1}{(i+1)\ln^2(i+1)}$
 
-Experimental: $\frac{1}{i^\alpha}$, $\frac{1}{(i+1)\ln(i+1)\ln^2\ln(i+1)}$, etc.
-%\begin{itemize}
-%\item $\frac{1}{i^\alpha}$
-%\item $\frac{1}{(i+1)\ln(i+1)\ln^2\ln(i+1)}$
-%\end{itemize}
+Experimental:  $\frac{1}{i^\alpha}$, $\frac1c$,  $\frac{1}{(i+4)\ln(i+4)\ln^2\ln(i+4)}$, etc.
+\end{block}
+
+\begin{block}{Noise}
+Different noise variance leads to diverse ability of experts to train, which opens curious quialities of the master algorithm
 \end{block}
 
 \begin{block}{Window size}
 As the algorithm does not know the locations of generator switches, finding an optimal training window is also a challenge.
 \end{block}
 
-\begin{block}{Mixing update coefficients}
-Default coefficient: $\alpha_t = \frac{1}{t+1}$
 
-Experimental:  $\frac{1}{(t+1)^\beta}$, etc.
+
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}
+\frametitle{Experiments}
+
+\begin{block}{Mixing update scheme}
+
+\begin{itemize}
+\item Start Vector Share - default scheme in GMPP
+\item Uniform Past Share
+\item Decaying Past Share
+\item Increasing Past Share - new proposed scheme
+\end{itemize}
+
 
 \end{block}
 
-Metric - the regret
+\begin{block}{Mixing update coefficients}
+Default coefficient: $\alpha_t = \frac{1}{t+1}$
+
+Experimental:  $\frac{1}{(t+1)^\beta}$, $\frac{1}{c}$, $\frac{1}{(t+c)}$, $\frac{1}{e^{t/3}}$, etc.
+
+\end{block}
+
 \end{frame}
 
 %------------------------------------------------
