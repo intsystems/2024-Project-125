@@ -29,12 +29,23 @@
 %----------------------------------------------------------------------------------------------------------
 \title[\hbox to 56mm{Online expert aggregation}]{Influence of hyperparameters on online aggregation with countable experts}
 \author[N.\,P.~Ivkin]{Sergey Kunin-Bogoiavlenskii}
-\institute{Moscow Institute of Physics and Technology}
-\date{\footnotesize
-\par\smallskip\emph{Course:} My first scientific paper\par (Strijov's practice)/Group 125 
+\institute[MIPT] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Moscow Institute of Physics and Technology \\ % Your institution for the title page
+\medskip
+\textit{kunin-bogoiavlenskii.sm@phystech.edu} % Your email address
 \par\smallskip\emph{Expert:} R.\,D.~Zukhba
 \par\smallskip\emph{Consultant:} A.\,V.~Zukhba
-\par\bigskip\small 2024}
+}
+
+
+%\institute{Moscow Institute of Physics and Technology}
+%\date{\footnotesize
+%%\par\smallskip\emph{Course:} My first scientific paper\par (Strijov's practice)/Group 125 
+%\par\smallskip\emph{Expert:} R.\,D.~Zukhba
+%\par\smallskip\emph{Consultant:} A.\,V.~Zukhba}
+%\par\bigskip\small 2024}
+\date{\today}
 
 %----------------------------------------------------------------------------------------------------------
 \begin{document}
@@ -51,25 +62,27 @@
 %-----------------------------------------------------------------------------------------------------
 
 
-%\begin{frame}
-%\frametitle{What can be forecast?}
-%%\begin{displayquote}
-%%There are two kinds of forecasters: those who \\ don’t know, and those who don’t know they don’t know. \\ John Kenneth Galbraith
-%%\end{displayquote}
-%\epigraph{Tell us what the future holds, so we may know that you are gods.}{\textit{Isaiah 41:23}}
-%%
-%%\epigraph{There are two kinds of forecasters: those who \\ don’t know, and those who don’t know they don’t know.}{\textit{John Kenneth Galbraith}}
-%%\blindtext
-%\begin{itemize}
-%\item Weather conditions
-%\item Economic trends
-%\item Technology advancements
-%\item Consumer behavior
-%\item Population growth
-%\item Political elections outcomes
+\begin{frame}
+\frametitle{What can be forecast?}
+%\begin{displayquote}
+%There are two kinds of forecasters: those who \\ don’t know, and those who don’t know they don’t know. \\ John Kenneth Galbraith
+%\end{displayquote}
+\setlength{\epigraphwidth}{0.45\textwidth}
+
+\epigraph{Tell us what the future holds, so we may know that you are gods.}{\textit{Isaiah 41:23}}
 %
-%\end{itemize}
-%\end{frame}
+%\epigraph{There are two kinds of forecasters: those who \\ don’t know, and those who don’t know they don’t know.}{\textit{John Kenneth Galbraith}}
+%\blindtext
+\begin{itemize}
+\item Weather conditions
+\item Economic trends
+\item Technology advancements
+\item Consumer behavior
+\item Population growth
+\item Political elections outcomes
+
+\end{itemize}
+\end{frame}
 
 
 %------------------------------------------------
@@ -313,7 +326,7 @@ Experimental:  $\frac{1}{(t+1)^\beta}$, $\frac{1}{c}$, $\frac{1}{(t+c)}$, $\frac
 %%------------------------------------------------
 
 \begin{frame}
-\frametitle{Loss plot}
+\frametitle{Initialization weights}
 \begin{figure}[htb]
 \centering % <-- added
 \includegraphics[width=1\linewidth]{diff_wf}
@@ -329,7 +342,7 @@ Experimental:  $\frac{1}{(t+1)^\beta}$, $\frac{1}{c}$, $\frac{1}{(t+c)}$, $\frac
 \begin{frame}
 
 
-\frametitle{Table}
+\frametitle{Noise}
 
 \begin{table}[H]
 \centering
@@ -367,7 +380,7 @@ Experimental:  $\frac{1}{(t+1)^\beta}$, $\frac{1}{c}$, $\frac{1}{(t+c)}$, $\frac
 
 %------------------------------------------------
 \begin{frame}
-\frametitle{Loss plot}
+\frametitle{Mixing schemes}
 \begin{figure}[htb]
 \centering % <-- added
 \includegraphics[width=1\linewidth]{diff_mt}
@@ -381,42 +394,42 @@ Experimental:  $\frac{1}{(t+1)^\beta}$, $\frac{1}{c}$, $\frac{1}{(t+c)}$, $\frac
 
 %------------------------------------------------
 
-\begin{frame}
-
-
-\frametitle{Table}
-\begin{table}[H]
-\centering
-%\caption{Regret with different Alpha and Weight Functions in Start Vector Share Update scheme}
-\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different Alpha and Weight Functions in Start Vector Share Update scheme  \\($\sigma^2 =1$, window size = 10)\end{varwidth}}
-\begin{tabular}{r|ccc}
-\toprule
- & \multicolumn{3}{c}{Weight function} \\
-\toprule
-{Alpha function} &
-\centering $\dfrac{1}{{(x+1)\ln^2(x+1)}}$ &
-\centering $\dfrac{1}{x^{1.01}}$ &
-\centering $\dfrac{1}{x^{0.5}}$ 
-\tabularnewline
-\midrule
-$1 / (t + 1)$ & 175594.64 & 132268.30 & \contour{black}{108630.68} \\
-$1 / (t + 1)^{0.5}$ & 245494.10 & 207099.32 & 164079.31 \\
-$1 / (t + 1)^{1.5}$ & 130339.21 & 125699.71 & 130185.66 \\
-$1 / (t + 1)^2$ & 136029.09 & 134929.54 & 133876.06 \\
-$1 / e^{t/3}$ & 136413.87 & 135409.06 & 134012.15 \\
-$1 / (t + 10)$ & 175411.17 & 132208.09 & \contour{black}{108638.55} \\
-$1 / (t + 100)$ & 173760.98 & 131623.56 & \contour{black}{108732.56}\\
-$1 / (t + 1000)$ & 162129.20 & 127165.47 & 110389.16 \\
-%$1 / 100$ & 220008.81 & 163117.40 & 129035.87 \\
-%$1 / 500$ & 198094.83 & 141385.79 & 111706.58 \\
-%$1 / 1000$ & 184324.73 & 135612.25 & \contour{black}{109449.15} \\
-%$1 / 5000$ & 147561.46 & 121905.50 & 115147.43 \\
-%$1 / 10000$ & 136414.42 & 119357.81 & 120634.74 \\
-%$1 / 50000$ & 130783.65 & 125141.06 & 129963.25 \\
-\bottomrule
-\end{tabular}
-\end{table}
-\end{frame}
+%\begin{frame}
+%
+%
+%\frametitle{Alpha coefficients}
+%\begin{table}[H]
+%\centering
+%%\caption{Regret with different Alpha and Weight Functions in Start Vector Share Update scheme}
+%\caption{\begin{varwidth}[t]{\linewidth}\centering Regret with different Alpha and Weight Functions in Start Vector Share Update scheme  \\($\sigma^2 =1$, window size = 10)\end{varwidth}}
+%\begin{tabular}{r|ccc}
+%\toprule
+% & \multicolumn{3}{c}{Weight function} \\
+%\toprule
+%{Alpha function} &
+%\centering $\dfrac{1}{{(x+1)\ln^2(x+1)}}$ &
+%\centering $\dfrac{1}{x^{1.01}}$ &
+%\centering $\dfrac{1}{x^{0.5}}$ 
+%\tabularnewline
+%\midrule
+%$1 / (t + 1)$ & 175594.64 & 132268.30 & \contour{black}{108630.68} \\
+%$1 / (t + 1)^{0.5}$ & 245494.10 & 207099.32 & 164079.31 \\
+%$1 / (t + 1)^{1.5}$ & 130339.21 & 125699.71 & 130185.66 \\
+%$1 / (t + 1)^2$ & 136029.09 & 134929.54 & 133876.06 \\
+%$1 / e^{t/3}$ & 136413.87 & 135409.06 & 134012.15 \\
+%$1 / (t + 10)$ & 175411.17 & 132208.09 & \contour{black}{108638.55} \\
+%$1 / (t + 100)$ & 173760.98 & 131623.56 & \contour{black}{108732.56}\\
+%$1 / (t + 1000)$ & 162129.20 & 127165.47 & 110389.16 \\
+%%$1 / 100$ & 220008.81 & 163117.40 & 129035.87 \\
+%%$1 / 500$ & 198094.83 & 141385.79 & 111706.58 \\
+%%$1 / 1000$ & 184324.73 & 135612.25 & \contour{black}{109449.15} \\
+%%$1 / 5000$ & 147561.46 & 121905.50 & 115147.43 \\
+%%$1 / 10000$ & 136414.42 & 119357.81 & 120634.74 \\
+%%$1 / 50000$ & 130783.65 & 125141.06 & 129963.25 \\
+%\bottomrule
+%\end{tabular}
+%\end{table}
+%\end{frame}
 
 %------------------------------------------------
 
@@ -441,12 +454,12 @@ $1 / (t + 1000)$ & 162129.20 & 127165.47 & 110389.16 \\
     
     \begin{block}
     
-    Further plans
+    Further directions of work
     
     \begin{itemize}
-    	\item Understand what is going on with different length of time series
-        \item Run experiments on real data 
-        \item Theoretically prove that the obtained function is the best.              
+    	\item Experiment with time series of other order of length.      
+	\item Run experiments on real data.
+        \item Theoretically prove that the obtained functions are better.             
     \end{itemize}
     \end{block}
 
