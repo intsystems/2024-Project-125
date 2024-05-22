@@ -73,7 +73,7 @@
     Aggregating forecasts from multiple experts is a valuable method to improve prediction accuracy.
     This paper examines the influence of hyperparameters on the performance of the aggregation algorithm for a countable number of experts.
     We implement a time series generator with specified properties and an aggregating forecasting model. 
-    We conduct a series of experiments with various hyperparameters of the algorithm (including initialization weights, mixing update coefficients, etc.), and propose a new mixing scheme, used in the algorithm.
+    We conduct a series of experiments with various hyperparameters of the algorithm and propose a new mixing scheme, used in the algorithm.
     The experiments confirm that these hyperparameters have a significant influence on the algorithm's performance.           
         
 %   \noindent
@@ -100,7 +100,7 @@
 %\linenumbers
 
 \section{Introduction}
-This work is inspired by the algorithm, developed in the article \cite{article}, considering online game of prediction with experts' advice. The data is presented as a time series, consisting of outcome pairs --- <<signal>> and <<response>>. 
+This work is inspired by the algorithm, developed in the article \cite{article}, which considers online game of prediction with experts' advice. The data is presented as a time series, consisting of outcome pairs --- <<signal>> and <<response>>. 
 In contrast to the classical statistical theory of sequential prediction, we make no assumptions about the nature of the data (which could be deterministic, stochastic, etc.). 
 We use machine learning methods to build forecasters within a game-theoretic approach.
 The online learning master model considers a series of reference forecasters, referred to as experts, to build its opinion by combining their predictions.
@@ -123,13 +123,13 @@ In this formulation of the forecasting problem, the series of prediction steps i
 The sequence of segments and its associated sequence of experts is called a partition. 
 The modified goal of the aggregating algorithm is to perform well relative to the best partition. 
 Accordingly, the new concept of algorithm regret is the difference between the algorithm's losses and the cumulative losses of the sequence of experts. 
-This change allows for a more accurate modeling of real-life conditions, where the nature of responses may change over time and different experts may predict with varying degrees of success depending on the current trend. 
+This change allows for a more accurate modeling of real-life conditions, where the nature of responses may change over time, and different experts may predict with varying degrees of success depending on the current trend. 
 
 The corresponding algorithm is called Fixed Share \cite{article98}. 
 A further proposed generalization of it is the Mixing Past Posteriors (MPP) method \cite{article02}. 
 A characteristic feature of the problem considered in \cite{article} is the absence of a predefined set of competing expert strategies, as was the case in the works cited above.
 Instead, new expert strategies are constructed at each step of the online learning process.
-The master must aggregate the forecasts of all expert strategies constructed up to that time in real-time at each step. 
+The master must aggregate the forecasts of all expert strategies constructed up to that time in real time at each step. 
 Algorithm GMPP, proposed in \cite{article}, is the foundation of our experiments. 
 
 In our work, we systematically explore the impact of various hyperparameters on the algorithm, including different weight functions for initializing experts, 
@@ -144,8 +144,6 @@ Let $x_1, x_2, \dots$ be the sequence of signals belonging to the sample space  
 The masters goal is to predict the sequence of the corresponding responses $y_1, y_2, \dots$ belonging to the outcome space $\mathcal{Y}$. 
 We assume that the master knows $a, b \in \RR$ --- the bounds of the responses sequence, s.t. $\forall i\quad a \leq y_i \leq b$.
 There is a countable number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
-%We assume that there is a countable number of experts $i \in \mathcal{N}$, where $\mathcal{N}$ is the natural numbers set. 
-%The predictions of the master and experts also belong to $\mathcal{Y}$. 
 Let $ \lambda: \mathcal{Y} \times \mathcal{Y} \rightarrow \RR_+$ be the nonnegative loss function. 
 
 At each step $t$ every expert $i \in \mathcal{N}$ provides his prediction $f_t^i = f_t^i(x_t)  \in \mathcal{Y}$. 
@@ -166,10 +164,6 @@ The best partition is formed based on a hindsight analysis of the experiment res
 \begin{breakablealgorithm}
 \caption{GMPP}
 \begin{algorithmic}
-%\STATE Parameters:
-%\STATE \textbullet~ Initialization weights $w^i_1$, s.t. $\sum\limits_{i \in \mathcal{N}}w^i_1 = 1$
-%\STATE \textbullet~ Alpha parameter series $\{\alpha_t\}$
-%\STATE \textbullet~ Train window size 
 
 \STATE Initialize the weights $w^i_1$ so that $\sum\limits_{i \in \mathcal{N}}w^i_1 = 1$
 \FOR{$t = 1, 2, \dots$}
@@ -207,17 +201,12 @@ Therefore , we fix certain length of time series for all experiments.
 We define generators $G_1, G_2, \dots, G_k$ by their weight vectors $\vec w_1, \vec w_2, \dots, \vec w_k \in \RR^d$. 
 Here, $d$ represents the dimensionality of the signals.
 
-We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_T \sim \mathcal{N}(0, I_d)$, indicating they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
-%We randomly divide this sequence of vectors into a series of segments.
-%%This series of vectors is then randomly divided into a sequence of segments. 
-%We denote these segments as $S_1, S_2, \dots, S_m$. 
-%Each segment $S_i$ is a sequence of vectors itself, containing elements from $\vec x_{s_{i-1}+1}$ to $\vec x_{s_i}$ (where $s_i$ is the index of the last element in segment $i$, $s_0 = 0$). 
-
+We generate signals as a series of vectors $\vec x_1, \vec x_2, \dots, \vec x_T \sim \mathcal{N}(0, I_d)$, indicating that they are drawn from a zero-mean Gaussian distribution with an identity covariance matrix .
 We randomly divide this sequence of vectors into a series of segments $\{S_1, S_2, \dots, S_m\}$ = $\{\{ \vec x_1, \vec x_2, \dots, \vec x_{|S_1|}\}, \{\vec x_{|S_1|+1}, \vec x_{|S_1|+2}, \dots, \vec x_{|S_1| + |S_2|}\}, \dots, \{\vec x_{T-|S_m|+1}, \vec x_{T-|S_m|+2}, \dots, \vec x_{T}\}\}$. 
 Importantly, each segment $S_i$ corresponds to a specific generator $G_{g(i)}$ according to a random function $g$. 
 This function determines which generator is responsible for creating responses for that segment. In our experiment, $g(i)$ is uniformly distributed in $\{1, 2, \dots, k\} \backslash \{g(i-1)\}$, so adjacent segments correspond to different generators.
 
-Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_T$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i)}, \vec x_i \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, \sigma^2)$. If $y_i  \notin [a, b]$, we regenerate $x_i$ until this condition is met. For our properties, bootstrap shows this happens less than in $4\%$ of the cases, so can be considered insignificant.
+Ultimately, we obtain the series of responses $y_1, y_2, \dots, y_T$ by taking the dot product of each signal vector with the weight vector of the corresponding  generator and adding the noise: $y_i = \langle \vec w_{g(i)}, \vec x_i \rangle + \varepsilon_i,$ where $\varepsilon_i \sim \mathcal{N}(0, \sigma^2)$. If $y_i  \notin [a, b]$, we regenerate $x_i$ until this condition is met. For our properties, bootstrap shows this is necessary in less than $4\%$ of the cases, so can be considered insignificant.
 \vspace{2mm}
 
 In our experiment, we fix the following data characteristics:
@@ -253,7 +242,6 @@ We investigate the impact of various hyperparameters on the GMPP algorithm's per
 \item Default: $w_1^t = \frac{1}{(t+1)\ln^2(t+1)}$
 \item Experimental: 
 \begin{itemize}
-%\item $w_1^t = \frac{1}{e^t}$, exploring exponential decay as a common alternative.
 \item $w_1^t = \frac{1}{(t+4)\ln(t+4)\ln^2\ln(t+4)}$, representing a slower decaying function.
 \item $w_1^t = \frac{1}{t^\alpha}$, with $\alpha \in (1, 2]$, to analyze the impact of faster decay rates.
 \item $w_1^t = \frac{1}{t^\alpha}$, with $\alpha \in (0, 1]$, to analyze the behavior with diverging weights.
@@ -330,10 +318,6 @@ We also propose a new mixing scheme:
 
 \item Noise Variance ($\sigma^2$): This parameter controls the level of Gaussian noise added to the generated responses, allowing us to assess the algorithm's robustness to noise. We experiment with various values of $\sigma^2$ to observe its impact on regret.
 \end{enumerate}
-%
-%As a metric of quality we use $R_T$ --- master's regret relative to the best partition.
-%We run experiments 4 times for each configuration of hyperparameters, and take the mean of the earned regrets.
-%
 
 \section{Results}
 
@@ -343,7 +327,7 @@ We analyze the impact of various hyperparameters on the GMPP algorithm's perform
 Table \ref{table:mt_wf} explores the influence of different ways of initializing the weights of experts (the importance assigned to each expert at the start of the algorithm) on the regret. We highlight the lowest regret values in bold.
 
 
-The results show that the best weight function can depend on the mixing scheme chosen. For example, in default scheme <<Start Vector Share>> weight functions based on diverging series yielded lower regret than those based on converging series. In this case, the $1/x^{0.5}$ weight function achieved the best performance (see Figure \ref{fig:diff_wf}). When employing converging weight series, schemes <<Increasing Past Share>> and <<Uniform Past Share>> appear to be better than others.
+The results show that the best weight function can depend on the mixing scheme chosen. For example, in default the <<Start Vector Share>> scheme, weight functions based on diverging series yielded lower regret than those based on converging series. In this case, the $1/x^{0.5}$ weight function achieved the best performance (see Figure \ref{fig:diff_wf}). When employing converging weight series, schemes <<Increasing Past Share>> and <<Uniform Past Share>> appear to be better than others.
 
 
 
@@ -426,8 +410,8 @@ The different mixing schemes show varying performance, with <<Increasing Past Sh
 \subsection{Impact of Mixing Update Coefficients}
 
 Table \ref{table:diff_af} examines the effect of different coefficients used in the Start Vector Share Mixing Update on the regret. 
-The update coefficient controls how much the past weights distribution among experts influences the new distribution versus the current distribution. The table once again confirms that the weights initialization function $1/x^{0.5}$ is the best among others, and shows that with this function, 
-the default mixing update coefficient $\alpha_t = 1 / (t + 1)$ stands out as a strong performer, with no serious competitors among other update coefficient functions. 
+The update coefficient controls the balance between the influence of past weight distributions and the current weight distribution on the resulting distribution. 
+The table once again confirms that the weights initialization function $1/x^{0.5}$ is the best for this scheme among others, and shows that with this function, the default mixing update coefficient $\alpha_t = 1 / (t + 1)$ stands out as a strong performer, with no serious competitors among other update coefficient functions. 
 
 \begin{table}[H]
 \centering
@@ -619,35 +603,32 @@ $1 / 50000$ & 125141 & 129963 & 131542 & 130965 & 131895 & 131885 \\
 \end{figure}
 
 
-Table \ref{table:mt} focuses on the performance of the default GMPP <<Start Vector Share>> and the newly proposed <<Increasing Past Share>> mixing schemes with different weight functions and update coefficients. 
+Table \ref{table:mt} focuses on the performance of the default  <<Start Vector Share>> and the newly proposed <<Increasing Past Share>> mixing schemes with different weight functions and update coefficients. 
 The «Start Vector» scheme generally performs better with the  $1/x^{0.5}$ weight function, while <<Increasing Past>> works better with the  $1/x^{1.1}$ weight function.
 
-Figure \ref{fig:mt} compares cumulative losses of master algorithm with different mixing shemes.
+Figure \ref{fig:mt} compares cumulative losses of the master algorithm with different mixing shemes.
 Amusingly, <<Uniform Past Share>> and <<Increasing Past Share>> schemes exhibit almost identical total loss curves, both significantly lower than the other schemes. 
-This consistent behavior is observed across multiple random runs of the algorithm and aligns with the findings presented in Figure \ref{fig:tw}, where these two schemes demonstrated equal regret at a window size of 10. 
-%This suggests that, for this particular problem and parameter configuration, uniformly weighting past expert predictions can be as effective as assigning increasing importance to older predictions. 
-%Further investigation is needed to determine if this holds true across a wider range of parameter settings and datasets.%This suggests that giving significant weight to the entire history of expert predictions, with a potential bias towards older experts in the case of "Increasing Past Share," can lead to better overall performance.
+This consistent behavior is observed across multiple random runs of the algorithm and aligns with the findings presented in Figure \ref{fig:tw}, where these two schemes demonstrated equal mean regret at a window size of 10. 
+
 %--------------------------------------------------------------------------------------------------------------------
 
 \section{Conclusion}
 
-This study investigated the impact of key hyperparameters on the performance of the GMPP algorithm for online prediction of locally stationary time series with a countable number of experts, which in our work were linear regression models. Our experiments systematically explored the influence of initialization weights, mixing update coefficients, mixing schemes, and expert window size on the algorithm's regret relative to the best partition.
+This study investigated the impact of key hyperparameters on the performance of the GMPP algorithm for online prediction of locally stationary time series using a countable number of linear regression models as experts. Our experiments systematically explored the influence of initialization weights, mixing update coefficients, mixing schemes, expert window size, and data noise variance on the algorithm's regret relative to the best partition.
 
 Our results demonstrate the importance of carefully tuning these hyperparameters, 
 as their optimal values can vary depending on the chosen mixing scheme and data characteristics. 
 Notably, the default GMPP <<Start Vector Share>> scheme performed best with diverging initialization weights, like $1/x^{0.5}$, and default mixing coefficients. 
 Furthermore, we proposed a new mixing scheme, <<Increasing Past Share>>, which gradually assigns increasing importance to older expert predictions. 
 In our specific environment, data, and expert configuration, this scheme, combined with certain weight initialization functions, exhibited promising performance. 
-Our experiments also revealed that increasing noise levels in the data could, in some cases, lead to lower, even negative, regret. 
+Our experiments also revealed that increasing noise levels in the data could lead to lower, even negative, regret. 
 This suggests the algorithm's potential to outperform the best partition in highly noisy environments.
 
 Future work could focus on further exploring the theoretical underpinnings of these empirical observations, 
 as well as investigating the robustness and generalizability of the findings across a broader range of datasets and experimental settings. 
-Exploring alternative expert models beyond linear regression could further enhance the algorithm's ability to adapt to more complex data.
+This includes evaluating the algorithm's performance on real-world time series data and exploring alternative expert models, which could further enhance the algorithm's adaptability and predictive power in complex scenarios.
 
-%In conclusion, this study emphasizes the significant impact of these adjustments on the GMPP algorithm's effectiveness. It highlights the importance of carefully selecting these settings based on the characteristics of the data and the desired performance goals. Further research is encouraged to explore optimal configurations for specific applications.
 
-%
 %\section{Preparing a manuscript}
 %\noindent
 %Manuscripts are prepared using \verb'jmlda.sty' style package.
@@ -657,14 +638,7 @@ Exploring alternative expert models beyond linear regression could further enhan
 %
 %Please note that this file must be saved in~\verb'UTF-8' encoding. Where possible select~\verb'UTF-8 without BOM' encoding. 
 %To change the encoding please use \verb'Sublime Text' or \verb'Notepad++' text editors.
-%
-%\section{Structure of the article}
-%\noindent
-%Divide your article into clearly defined and numbered sections and paragraphs.
 
-%\section{Concluding Remarks}
-%This section should provide the summary and explore the significance of the results achieved and list problems not yet solved.
-%Results should be clear and concise.
 
 %%%% please specify doi of the cited item if possible, see~\bibitem{article}
 %%%% Crossref doi of the item can be retrieved at http://www.crossref.org/guestquery/
@@ -706,7 +680,17 @@ Expert Advice].
     Matematicheskie osnovy mashinnogo obucheniya i prognozirovaniya 
     [Mathematical Foundations of Machine Learning and Forecasting].
     Available at: \BibUrl{http://iitp.ru/upload/publications/6256/vyugin1.pdf}
+    
+\bibitem{vovk98}
+    \BibAuthor{V.\,Vovk}. 1998.
+    \BibTitle{A Game of Prediction with Expert Advice}.
+    \BibJournal{Journal of Computer and System Sciences}.
+    Available at: \BibUrl{https://www.sciencedirect.com/science/article/pii/S0022000097915567}
 
+\bibitem{vovk09}
+    \BibAuthor{V.\,Vovk}. 2009.
+    \BibTitle{Prediction with expert evaluators’ advice}.
+    Available at: \BibUrl{http://arxiv.org/pdf/0902.4127v2}
 
             
 \end{thebibliography}
