@@ -40,9 +40,8 @@ Cтатья исследует влияние гиперпараметров н�
 Эксперименты подтверждают, что данные гиперпараметры оказывают существенное влияние на точность алгоритма.
 
 
-.. Research publications
-.. ===============================
-.. 1. 
+Paper latest version can be found here: <https://github.com/intsystems/2024-Project-125/blob/master/paper/KuninBogoiavlenskii2024ExpertsAggregating.pdf>
+
 
 .. Presentations at conferences on the topic of research
 .. ================================================
