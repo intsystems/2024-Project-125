@@ -21,7 +21,7 @@
     :Научный руководитель: к.ф.-м.н. Зухба Расим Даурович
     :Научный консультант: к.ф.-м.н. Зухба Анастасия Викторовна
 
-`Last version of paper <https://github.com/intsystems/2024-Project-125/blob/master/paper/KuninBogoiavlenskii2024ExpertsAggregating.pdf>`__
+`Last version of the paper <https://github.com/intsystems/2024-Project-125/blob/master/paper/KuninBogoiavlenskii2024ExpertsAggregating.pdf>`__
 
 Abstract
 ========
